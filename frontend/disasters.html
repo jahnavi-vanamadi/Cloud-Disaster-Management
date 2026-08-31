@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disasters | ResQCloud</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">☁️ ResQCloud</div>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="report.html">Report Disaster</a>
+        <a href="disasters.html" class="active">Disasters</a>
+        <a href="resources.html">Resources</a>
+    </nav>
+
+    <a href="admin.html" class="admin-btn">Admin</a>
+
+</header>
+
+
+<main class="page">
+
+    <div class="page-header">
+
+        <div>
+            <span class="section-label">INCIDENT MONITORING</span>
+            <h1>Disaster Reports</h1>
+            <p>View currently reported disaster incidents.</p>
+        </div>
+
+        <a href="report.html" class="primary-btn">
+            + Report Disaster
+        </a>
+
+    </div>
+
+
+    <div class="filter-bar">
+
+        <input
+            type="text"
+            id="searchDisaster"
+            placeholder="🔍 Search location or disaster..."
+            onkeyup="filterDisasters()"
+        >
+
+        <select>
+            <option>All Types</option>
+            <option>Flood</option>
+            <option>Fire</option>
+            <option>Cyclone</option>
+            <option>Earthquake</option>
+        </select>
+
+        <select>
+            <option>All Status</option>
+            <option>Active</option>
+            <option>Resolved</option>
+        </select>
+
+    </div>
+
+
+    <div class="disaster-grid" id="disasterList">
+
+        <div class="disaster-card">
+
+            <div class="disaster-top">
+                <span class="disaster-type flood">🌊 Flood</span>
+                <span class="status active-status">Active</span>
+            </div>
+
+            <h3>Flooding in Vijayawada</h3>
+
+            <p>
+                Heavy rainfall has caused flooding in several low-lying areas.
+            </p>
+
+            <div class="disaster-meta">
+                <span>📍 Vijayawada</span>
+                <span>🕐 Today</span>
+            </div>
+
+        </div>
+
+
+        <div class="disaster-card">
+
+            <div class="disaster-top">
+                <span class="disaster-type fire">🔥 Fire</span>
+                <span class="status active-status">Active</span>
+            </div>
+
+            <h3>Building Fire</h3>
+
+            <p>
+                Fire reported in a commercial building. Emergency services notified.
+            </p>
+
+            <div class="disaster-meta">
+                <span>📍 Guntur</span>
+                <span>🕐 Today</span>
+            </div>
+
+        </div>
+
+
+        <div class="disaster-card">
+
+            <div class="disaster-top">
+                <span class="disaster-type storm">🌪️ Storm</span>
+                <span class="status resolved-status">Resolved</span>
+            </div>
+
+            <h3>Severe Storm</h3>
+
+            <p>
+                Strong winds affected multiple areas. Response completed.
+            </p>
+
+            <div class="disaster-meta">
+                <span>📍 Visakhapatnam</span>
+                <span>🕐 Yesterday</span>
+            </div>
+
+        </div>
+
+
+        <div class="disaster-card">
+
+            <div class="disaster-top">
+                <span class="disaster-type earthquake">🏚️ Earthquake</span>
+                <span class="status active-status">Active</span>
+            </div>
+
+            <h3>Earthquake Alert</h3>
+
+            <p>
+                Minor earthquake reported. Authorities are monitoring the area.
+            </p>
+
+            <div class="disaster-meta">
+                <span>📍 Nellore</span>
+                <span>🕐 Yesterday</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<footer>
+    <p>© 2026 ResQCloud. Academic Project.</p>
+</footer>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>

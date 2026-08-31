@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | ResQCloud</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">☁️ ResQCloud</div>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="report.html">Report Disaster</a>
+        <a href="disasters.html">Disasters</a>
+        <a href="resources.html">Resources</a>
+    </nav>
+
+</header>
+
+
+<main class="page">
+
+    <div class="page-header">
+
+        <div>
+            <span class="section-label">ADMINISTRATION</span>
+            <h1>Admin Dashboard</h1>
+            <p>Manage disaster reports and emergency resources.</p>
+        </div>
+
+    </div>
+
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <span class="stat-icon">📋</span>
+            <small>Pending Reports</small>
+            <h2>5</h2>
+            <p>Require verification</p>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-icon">🔴</span>
+            <small>Active Incidents</small>
+            <h2>8</h2>
+            <p>Currently active</p>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-icon">👥</span>
+            <small>Users</small>
+            <h2>128</h2>
+            <p>Registered users</p>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-icon">🚑</span>
+            <small>Resources</small>
+            <h2>42</h2>
+            <p>Tracked resources</p>
+        </div>
+
+    </div>
+
+
+    <section class="panel">
+
+        <div class="panel-header">
+            <div>
+                <h2>Recent Disaster Reports</h2>
+                <p>Review and manage incoming reports.</p>
+            </div>
+        </div>
+
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Disaster</th>
+                    <th>Location</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr>
+                    <td>Flood</td>
+                    <td>Vijayawada</td>
+                    <td>High</td>
+                    <td>
+                        <span class="status active-status">Active</span>
+                    </td>
+                    <td>
+                        <button class="table-btn">Review</button>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Fire</td>
+                    <td>Guntur</td>
+                    <td>Critical</td>
+                    <td>
+                        <span class="status active-status">Active</span>
+                    </td>
+                    <td>
+                        <button class="table-btn">Review</button>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Storm</td>
+                    <td>Visakhapatnam</td>
+                    <td>Medium</td>
+                    <td>
+                        <span class="status resolved-status">Resolved</span>
+                    </td>
+                    <td>
+                        <button class="table-btn">View</button>
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </section>
+
+</main>
+
+
+<footer>
+    <p>© 2026 ResQCloud. Academic Project.</p>
+</footer>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>
