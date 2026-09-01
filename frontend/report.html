@@ -11,9 +11,10 @@
 <body>
 
 <header class="navbar">
-    <div class="logo">☁️ ResQCloud</div>
 
 ```
+<div class="logo">☁️ ResQCloud</div>
+
 <nav>
     <a href="index.html">Home</a>
     <a href="dashboard.html">Dashboard</a>
@@ -31,67 +32,166 @@
 
 ```
 <div class="page-header">
+
     <div>
         <span class="section-label">EMERGENCY REPORT</span>
+
         <h1>Report a Disaster</h1>
-        <p>Submit information about a disaster or emergency incident.</p>
+
+        <p>
+            Submit information about a disaster or emergency incident.
+        </p>
     </div>
+
 </div>
+
 
 <section class="panel">
 
     <form id="reportForm">
 
         <div class="form-group">
-            <label for="disasterType">Disaster Type</label>
-            <select id="disasterType" required>
-                <option value="">Select disaster type</option>
-                <option value="Flood">Flood</option>
-                <option value="Fire">Fire</option>
-                <option value="Earthquake">Earthquake</option>
-                <option value="Cyclone">Cyclone</option>
-                <option value="Landslide">Landslide</option>
-                <option value="Storm">Storm</option>
-                <option value="Other">Other</option>
+
+            <label for="disasterType">
+                Disaster Type
+            </label>
+
+            <select id="disasterType" name="disasterType" required>
+
+                <option value="">
+                    Select disaster type
+                </option>
+
+                <option value="Flood">
+                    Flood
+                </option>
+
+                <option value="Fire">
+                    Fire
+                </option>
+
+                <option value="Earthquake">
+                    Earthquake
+                </option>
+
+                <option value="Cyclone">
+                    Cyclone
+                </option>
+
+                <option value="Landslide">
+                    Landslide
+                </option>
+
+                <option value="Storm">
+                    Storm
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+
             </select>
+
         </div>
 
-        <div class="form-group">
-            <label for="location">Location</label>
-            <input type="text" id="location"
-                   placeholder="Enter disaster location" required>
-        </div>
 
         <div class="form-group">
-            <label for="severity">Severity</label>
-            <select id="severity" required>
-                <option value="">Select severity</option>
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Critical">Critical</option>
+
+            <label for="location">
+                Location
+            </label>
+
+            <input
+                type="text"
+                id="location"
+                name="location"
+                placeholder="Enter disaster location"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="severity">
+                Severity
+            </label>
+
+            <select id="severity" name="severity" required>
+
+                <option value="">
+                    Select severity
+                </option>
+
+                <option value="Low">
+                    Low
+                </option>
+
+                <option value="Medium">
+                    Medium
+                </option>
+
+                <option value="High">
+                    High
+                </option>
+
+                <option value="Critical">
+                    Critical
+                </option>
+
             </select>
+
         </div>
+
 
         <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description"
-                      placeholder="Describe the disaster situation..."
-                      rows="5" required></textarea>
+
+            <label for="description">
+                Description
+            </label>
+
+            <textarea
+                id="description"
+                name="description"
+                rows="5"
+                placeholder="Describe the disaster situation..."
+                required
+            ></textarea>
+
         </div>
+
 
         <div class="form-group">
-            <label for="image">Upload Image</label>
-            <input type="file" id="image" accept="image/*">
+
+            <label for="image">
+                Upload Image
+            </label>
+
+            <input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+            >
+
         </div>
 
-        <button type="submit" class="primary-btn">
+
+        <button
+            type="submit"
+            class="primary-btn"
+        >
             Submit Report
         </button>
 
     </form>
 
-    <div id="successMessage" style="display:none; margin-top:20px;">
+
+    <div
+        id="successMessage"
+        style="display: none; margin-top: 20px;"
+    >
         ✅ Report submitted successfully!
     </div>
 
@@ -101,19 +201,30 @@
 </main>
 
 <footer>
-    <p>© 2026 ResQCloud. Academic Project.</p>
+
+```
+<p>
+    © 2026 ResQCloud. Academic Project.
+</p>
+```
+
 </footer>
 
 <script>
-document.getElementById("reportForm").addEventListener("submit", function(event) {
-    event.preventDefault();
 
-    document.getElementById("successMessage").style.display = "block";
+document
+    .getElementById("reportForm")
+    .addEventListener("submit", function(event) {
 
-    this.reset();
-});
+        event.preventDefault();
+
+        document.getElementById("successMessage").style.display = "block";
+
+        this.reset();
+
+    });
+
 </script>
 
 </body>
 </html>
-
