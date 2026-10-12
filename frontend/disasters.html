@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Disasters | ResQCloud</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/disasters.css">
 </head>
 
 <body>
@@ -49,7 +48,7 @@
         <input
             type="text"
             id="searchDisaster"
-            placeholder="🔍 Search location or description..."
+            placeholder="🔍 Search location or disaster..."
         >
 
         <select id="typeFilter">
@@ -60,37 +59,19 @@
             <option value="storm">Storm</option>
             <option value="earthquake">Earthquake</option>
             <option value="landslide">Landslide</option>
-            <option value="other">Other</option>
         </select>
 
-        <select id="locationFilter">
-            <option value="all">All Locations</option>
-        </select>
-
-        <select id="severityFilter">
+        <select id="statusFilter">
             <option value="all">All Severity</option>
             <option value="high">High</option>
             <option value="medium">Medium</option>
             <option value="low">Low</option>
         </select>
 
-        <select id="statusFilter">
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="monitoring">Monitoring</option>
-            <option value="resolved">Resolved</option>
-        </select>
-
-        <select id="sourceFilter">
-            <option value="all">All Sources</option>
-            <option value="community">Community Reports (unverified)</option>
-            <option value="usgs">USGS Earthquakes (official)</option>
-        </select>
-
     </div>
 
-    <p class="result-count" id="resultCount"></p>
 
+    <!-- REAL REPORTS FROM BACKEND -->
 
     <div class="disaster-grid" id="disasterList">
 
@@ -101,24 +82,12 @@
 </main>
 
 
-<!-- DETAILS POPUP -->
-<div class="modal-backdrop" id="detailsModal" hidden>
-    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-        <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
-        <div id="modalBody"></div>
-    </div>
-</div>
-
-
-
-
-
 <footer>
     <p>© 2026 ResQCloud. Academic Project.</p>
 </footer>
 
 
-<script type="module" src="js/disasters.js"></script>
+<script src="js/disasters.js"></script>
 
 </body>
 </html>
