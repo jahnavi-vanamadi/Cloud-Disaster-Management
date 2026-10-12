@@ -23,6 +23,7 @@
     <a href="admin.html" class="admin-btn">Admin</a>
 </header>
 
+
 <main class="page">
 
     <div class="page-header">
@@ -41,7 +42,7 @@
         <div class="stat-card">
             <span class="stat-icon">🚨</span>
             <small>Total Reports</small>
-            <h2 id="totalReports">24</h2>
+            <h2 id="totalReports">Loading...</h2>
             <p>Reported incidents</p>
         </div>
 
@@ -71,7 +72,10 @@
 
     <section class="dashboard-grid">
 
+        <!-- RECENT REPORTS -->
+
         <div class="panel">
+
             <div class="panel-header">
                 <div>
                     <h2>Recent Reports</h2>
@@ -81,43 +85,18 @@
                 <a href="disasters.html">View All</a>
             </div>
 
-            <div class="report-row">
-                <div class="report-icon flood">🌊</div>
-
-                <div class="report-info">
-                    <strong>Flood</strong>
-                    <span>Vijayawada</span>
-                </div>
-
-                <span class="status active-status">Active</span>
-            </div>
-
-            <div class="report-row">
-                <div class="report-icon fire">🔥</div>
-
-                <div class="report-info">
-                    <strong>Fire</strong>
-                    <span>Guntur</span>
-                </div>
-
-                <span class="status active-status">Active</span>
-            </div>
-
-            <div class="report-row">
-                <div class="report-icon storm">🌪️</div>
-
-                <div class="report-info">
-                    <strong>Storm</strong>
-                    <span>Visakhapatnam</span>
-                </div>
-
-                <span class="status resolved-status">Resolved</span>
+            <!-- Reports from backend will appear here -->
+            <div id="recentReports">
+                <p>Loading reports...</p>
             </div>
 
         </div>
 
 
+        <!-- DISASTER DISTRIBUTION -->
+
         <div class="panel">
+
             <div class="panel-header">
                 <div>
                     <h2>Disaster Distribution</h2>
@@ -130,6 +109,7 @@
                     <span>Flood</span>
                     <strong>40%</strong>
                 </div>
+
                 <div class="bar">
                     <span style="width:40%"></span>
                 </div>
@@ -140,6 +120,7 @@
                     <span>Fire</span>
                     <strong>25%</strong>
                 </div>
+
                 <div class="bar">
                     <span style="width:25%"></span>
                 </div>
@@ -150,6 +131,7 @@
                     <span>Storm</span>
                     <strong>20%</strong>
                 </div>
+
                 <div class="bar">
                     <span style="width:20%"></span>
                 </div>
@@ -160,6 +142,7 @@
                     <span>Other</span>
                     <strong>15%</strong>
                 </div>
+
                 <div class="bar">
                     <span style="width:15%"></span>
                 </div>
@@ -171,11 +154,12 @@
 
 </main>
 
+
 <footer>
     <p>© 2026 ResQCloud. Academic Project.</p>
 </footer>
 
-<script src="js/script.js"></script>
 
+<script type="module" src="js/dashboard.js"></script>
 </body>
 </html>

@@ -3,179 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | ResQCloud</title>
+
+    <title>Report Disaster | ResQCloud</title>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
 <header class="navbar">
+
     <div class="logo">☁️ ResQCloud</div>
 
     <nav>
         <a href="index.html">Home</a>
-        <a href="dashboard.html" class="active">Dashboard</a>
-        <a href="report.html">Report Disaster</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="report.html" class="active">Report Disaster</a>
         <a href="disasters.html">Disasters</a>
         <a href="resources.html">Resources</a>
     </nav>
 
     <a href="admin.html" class="admin-btn">Admin</a>
+
 </header>
+
 
 <main class="page">
 
     <div class="page-header">
+
         <div>
-            <span class="section-label">OVERVIEW</span>
-            <h1>Disaster Dashboard</h1>
-            <p>Monitor disaster activity and emergency response information.</p>
-        </div>
 
-        <a href="report.html" class="primary-btn">+ Report Disaster</a>
-    </div>
+            <span class="section-label">
+                EMERGENCY REPORT
+            </span>
 
+            <h1>
+                Report a Disaster
+            </h1>
 
-    <div class="stats-grid">
+            <p>
+                Provide details about the disaster so emergency teams
+                can respond quickly.
+            </p>
 
-        <div class="stat-card">
-            <span class="stat-icon">🚨</span>
-            <small>Total Reports</small>
-            <h2 id="totalReports">24</h2>
-            <p>Reported incidents</p>
-        </div>
-
-        <div class="stat-card">
-            <span class="stat-icon">🔴</span>
-            <small>Active Disasters</small>
-            <h2>8</h2>
-            <p>Currently active</p>
-        </div>
-
-        <div class="stat-card">
-            <span class="stat-icon">🟢</span>
-            <small>Resolved</small>
-            <h2>16</h2>
-            <p>Successfully resolved</p>
-        </div>
-
-        <div class="stat-card">
-            <span class="stat-icon">🚑</span>
-            <small>Resources</small>
-            <h2>42</h2>
-            <p>Available resources</p>
         </div>
 
     </div>
 
 
-    <section class="dashboard-grid">
+    <section class="panel">
 
-        <div class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Recent Reports</h2>
-                    <p>Latest disaster reports</p>
-                </div>
+        <form id="reportForm">
 
-                <a href="disasters.html">View All</a>
+            <!-- NAME -->
+
+            <div class="form-group">
+
+                <label for="name">
+                    Your Name
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Enter your name"
+                    required
+                >
+
             </div>
 
-            <div class="report-row">
-                <div class="report-icon flood">🌊</div>
 
-                <div class="report-info">
-                    <strong>Flood</strong>
-                    <span>Vijayawada</span>
-                </div>
+            <!-- DISASTER TYPE -->
 
-                <span class="status active-status">Active</span>
+            <div class="form-group">
+
+                <label for="disaster_type">
+                    Disaster Type
+                </label>
+
+                <select
+                    id="disaster_type"
+                    name="disaster_type"
+                    required
+                >
+
+                    <option value="">
+                        Select disaster type
+                    </option>
+
+                    <option value="Flood">
+                        Flood
+                    </option>
+
+                    <option value="Fire">
+                        Fire
+                    </option>
+
+                    <option value="Storm">
+                        Storm
+                    </option>
+
+                    <option value="Earthquake">
+                        Earthquake
+                    </option>
+
+                    <option value="Landslide">
+                        Landslide
+                    </option>
+
+                    <option value="Other">
+                        Other
+                    </option>
+
+                </select>
+
             </div>
 
-            <div class="report-row">
-                <div class="report-icon fire">🔥</div>
 
-                <div class="report-info">
-                    <strong>Fire</strong>
-                    <span>Guntur</span>
-                </div>
+            <!-- LOCATION -->
 
-                <span class="status active-status">Active</span>
+            <div class="form-group">
+
+                <label for="location">
+                    Location
+                </label>
+
+                <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    placeholder="Enter disaster location"
+                    required
+                >
+
             </div>
 
-            <div class="report-row">
-                <div class="report-icon storm">🌪️</div>
 
-                <div class="report-info">
-                    <strong>Storm</strong>
-                    <span>Visakhapatnam</span>
-                </div>
+            <!-- DESCRIPTION -->
 
-                <span class="status resolved-status">Resolved</span>
+            <div class="form-group">
+
+                <label for="description">
+                    Description
+                </label>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="5"
+                    placeholder="Describe what happened..."
+                    required
+                ></textarea>
+
             </div>
 
-        </div>
 
+            <!-- SEVERITY -->
 
-        <div class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Disaster Distribution</h2>
-                    <p>Current incident categories</p>
-                </div>
+            <div class="form-group">
+
+                <label for="severity">
+                    Severity
+                </label>
+
+                <select
+                    id="severity"
+                    name="severity"
+                    required
+                >
+
+                    <option value="">
+                        Select severity
+                    </option>
+
+                    <option value="Low">
+                        Low
+                    </option>
+
+                    <option value="Medium">
+                        Medium
+                    </option>
+
+                    <option value="High">
+                        High
+                    </option>
+
+                </select>
+
             </div>
 
-            <div class="bar-item">
-                <div>
-                    <span>Flood</span>
-                    <strong>40%</strong>
-                </div>
-                <div class="bar">
-                    <span style="width:40%"></span>
-                </div>
-            </div>
 
-            <div class="bar-item">
-                <div>
-                    <span>Fire</span>
-                    <strong>25%</strong>
-                </div>
-                <div class="bar">
-                    <span style="width:25%"></span>
-                </div>
-            </div>
+            <!-- SUBMIT -->
 
-            <div class="bar-item">
-                <div>
-                    <span>Storm</span>
-                    <strong>20%</strong>
-                </div>
-                <div class="bar">
-                    <span style="width:20%"></span>
-                </div>
-            </div>
+            <button
+                type="submit"
+                class="primary-btn"
+                id="submitReportBtn"
+            >
+                Submit Disaster Report
+            </button>
 
-            <div class="bar-item">
-                <div>
-                    <span>Other</span>
-                    <strong>15%</strong>
-                </div>
-                <div class="bar">
-                    <span style="width:15%"></span>
-                </div>
-            </div>
 
-        </div>
+            <!-- STATUS MESSAGE -->
+
+            <p
+                id="reportMessage"
+                style="margin-top: 15px;"
+            ></p>
+
+        </form>
 
     </section>
 
 </main>
 
-<footer>
-    <p>© 2026 ResQCloud. Academic Project.</p>
-</footer>
 
-<script src="js/script.js"></script>
+<!-- Report JavaScript -->
+
+<script type="module" src="js/report.js"></script>
 
 </body>
 </html>

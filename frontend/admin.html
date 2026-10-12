@@ -41,30 +41,30 @@
 
         <div class="stat-card">
             <span class="stat-icon">📋</span>
-            <small>Pending Reports</small>
-            <h2>5</h2>
-            <p>Require verification</p>
+            <small>Total Reports</small>
+            <h2 id="adminTotalReports">Loading...</h2>
+            <p>Reports received</p>
         </div>
 
         <div class="stat-card">
             <span class="stat-icon">🔴</span>
-            <small>Active Incidents</small>
-            <h2>8</h2>
-            <p>Currently active</p>
+            <small>High Severity</small>
+            <h2 id="highSeverity">Loading...</h2>
+            <p>Require attention</p>
         </div>
 
         <div class="stat-card">
-            <span class="stat-icon">👥</span>
-            <small>Users</small>
-            <h2>128</h2>
-            <p>Registered users</p>
+            <span class="stat-icon">🟡</span>
+            <small>Medium Severity</small>
+            <h2 id="mediumSeverity">Loading...</h2>
+            <p>Require monitoring</p>
         </div>
 
         <div class="stat-card">
-            <span class="stat-icon">🚑</span>
-            <small>Resources</small>
-            <h2>42</h2>
-            <p>Tracked resources</p>
+            <span class="stat-icon">🟢</span>
+            <small>Low Severity</small>
+            <h2 id="lowSeverity">Loading...</h2>
+            <p>Lower priority</p>
         </div>
 
     </div>
@@ -80,59 +80,32 @@
         </div>
 
 
-        <table>
+        <div style="overflow-x:auto;">
 
-            <thead>
-                <tr>
-                    <th>Disaster</th>
-                    <th>Location</th>
-                    <th>Severity</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
+            <table>
 
-            <tbody>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Disaster</th>
+                        <th>Location</th>
+                        <th>Reported By</th>
+                        <th>Severity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
 
-                <tr>
-                    <td>Flood</td>
-                    <td>Vijayawada</td>
-                    <td>High</td>
-                    <td>
-                        <span class="status active-status">Active</span>
-                    </td>
-                    <td>
-                        <button class="table-btn">Review</button>
-                    </td>
-                </tr>
+                <tbody id="adminReportsTable">
 
-                <tr>
-                    <td>Fire</td>
-                    <td>Guntur</td>
-                    <td>Critical</td>
-                    <td>
-                        <span class="status active-status">Active</span>
-                    </td>
-                    <td>
-                        <button class="table-btn">Review</button>
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="6">Loading reports...</td>
+                    </tr>
 
-                <tr>
-                    <td>Storm</td>
-                    <td>Visakhapatnam</td>
-                    <td>Medium</td>
-                    <td>
-                        <span class="status resolved-status">Resolved</span>
-                    </td>
-                    <td>
-                        <button class="table-btn">View</button>
-                    </td>
-                </tr>
+                </tbody>
 
-            </tbody>
+            </table>
 
-        </table>
+        </div>
 
     </section>
 
@@ -143,7 +116,8 @@
     <p>© 2026 ResQCloud. Academic Project.</p>
 </footer>
 
-<script src="js/script.js"></script>
+
+<script src="js/admin.js"></script>
 
 </body>
 </html>

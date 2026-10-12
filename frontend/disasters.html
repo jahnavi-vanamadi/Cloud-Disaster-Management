@@ -49,110 +49,33 @@
             type="text"
             id="searchDisaster"
             placeholder="🔍 Search location or disaster..."
-            onkeyup="filterDisasters()"
         >
 
-        <select>
-            <option>All Types</option>
-            <option>Flood</option>
-            <option>Fire</option>
-            <option>Cyclone</option>
-            <option>Earthquake</option>
+        <select id="typeFilter">
+            <option value="all">All Types</option>
+            <option value="flood">Flood</option>
+            <option value="fire">Fire</option>
+            <option value="cyclone">Cyclone</option>
+            <option value="storm">Storm</option>
+            <option value="earthquake">Earthquake</option>
+            <option value="landslide">Landslide</option>
         </select>
 
-        <select>
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Resolved</option>
+        <select id="statusFilter">
+            <option value="all">All Severity</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
         </select>
 
     </div>
 
 
+    <!-- REAL REPORTS FROM BACKEND -->
+
     <div class="disaster-grid" id="disasterList">
 
-        <div class="disaster-card">
-
-            <div class="disaster-top">
-                <span class="disaster-type flood">🌊 Flood</span>
-                <span class="status active-status">Active</span>
-            </div>
-
-            <h3>Flooding in Vijayawada</h3>
-
-            <p>
-                Heavy rainfall has caused flooding in several low-lying areas.
-            </p>
-
-            <div class="disaster-meta">
-                <span>📍 Vijayawada</span>
-                <span>🕐 Today</span>
-            </div>
-
-        </div>
-
-
-        <div class="disaster-card">
-
-            <div class="disaster-top">
-                <span class="disaster-type fire">🔥 Fire</span>
-                <span class="status active-status">Active</span>
-            </div>
-
-            <h3>Building Fire</h3>
-
-            <p>
-                Fire reported in a commercial building. Emergency services notified.
-            </p>
-
-            <div class="disaster-meta">
-                <span>📍 Guntur</span>
-                <span>🕐 Today</span>
-            </div>
-
-        </div>
-
-
-        <div class="disaster-card">
-
-            <div class="disaster-top">
-                <span class="disaster-type storm">🌪️ Storm</span>
-                <span class="status resolved-status">Resolved</span>
-            </div>
-
-            <h3>Severe Storm</h3>
-
-            <p>
-                Strong winds affected multiple areas. Response completed.
-            </p>
-
-            <div class="disaster-meta">
-                <span>📍 Visakhapatnam</span>
-                <span>🕐 Yesterday</span>
-            </div>
-
-        </div>
-
-
-        <div class="disaster-card">
-
-            <div class="disaster-top">
-                <span class="disaster-type earthquake">🏚️ Earthquake</span>
-                <span class="status active-status">Active</span>
-            </div>
-
-            <h3>Earthquake Alert</h3>
-
-            <p>
-                Minor earthquake reported. Authorities are monitoring the area.
-            </p>
-
-            <div class="disaster-meta">
-                <span>📍 Nellore</span>
-                <span>🕐 Yesterday</span>
-            </div>
-
-        </div>
+        <p>Loading disaster reports...</p>
 
     </div>
 
@@ -163,7 +86,8 @@
     <p>© 2026 ResQCloud. Academic Project.</p>
 </footer>
 
-<script src="js/script.js"></script>
+
+<script src="js/disasters.js"></script>
 
 </body>
 </html>
