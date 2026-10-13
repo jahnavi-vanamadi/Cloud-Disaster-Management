@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================================
+    // HELPER FUNCTIONS FOR RESQCLOUD AUTHENTICATION & SECURITY
+    // ========================================================
+
+    // Check if the user is authenticated with Firebase Auth
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Check if the user is the owner of the document
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Retrieve user data document from 'users' collection
+    function getUserData() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data
+        : null;
+    }
+
+    // Check if authenticated user has Admin privileges
+    function isAdmin() {
+      return isSignedIn() && (
+        (getUserData() != null && getUserData().role == 'Admin') ||
+        (request.auth.token.keys().hasAny(['admin']) && request.auth.token.admin == true) ||
+        (request.auth.token.keys().hasAny(['email']) && request.auth.token.email.matches('(?i).*admin.*'))
+      );
+    }
+
+    // Check if authenticated user is a Responder or Admin
+    function isResponder() {
+      return isSignedIn() && (
+        isAdmin() ||
+        (getUserData() != null && getUserData().role == 'Responder')
+      );
+    }
+
+    // ========================================================
+    // 1. USERS COLLECTION
+    // ========================================================
+    // Profiles of registered users (Admin, Responder, Citizen)
+    match /users/{userId} {
+      // Authenticated users can view user profiles
+      allow read: if isSignedIn();
+
+      // Users can only create their own profile upon registration
+      // or an Admin can create user profiles
+      allow create: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isAdmin()
+      );
+
+      // Users can update their own profile (name, etc.)
+      // but only Admins can change user roles
+      allow update: if isSignedIn() && (
+        (request.auth.uid == userId && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) ||
+          isAdmin()
+        )) ||
+        isAdmin()
+      );
+
+      // Only Admins can delete user accounts
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================
+    // 2. DISASTER REPORTS COLLECTION
+    // ========================================================
+    // Disaster incidents reported by citizens or responders
+    match /disaster_reports/{reportId} {
+      // Public read access: Community, first responders, and
+      // public dashboards must be able to view disaster warnings
+      allow read: if true;
+
+      // Only authenticated users can submit official disaster reports
+      // Enforce strict schema and data validation
+      allow create: if isSignedIn() &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 2 &&
+        request.resource.data.disaster_type is string &&
+        request.resource.data.location is string &&
+        request.resource.data.description is string &&
+        request.resource.data.description.size() >= 5 &&
+        request.resource.data.severity in ['Low', 'Medium', 'High'];
+
+      // Only Responders and Admins can update disaster status / severity
+      allow update: if isResponder();
+
+      // ONLY Admins have permission to delete disaster reports
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================
+    // 3. EMERGENCY RESOURCES COLLECTION
+    // ========================================================
+    // Ambulances, fire trucks, rescue teams, and supplies
+    match /resources/{resourceId} {
+      // Public read access to view available emergency resources
+      allow read: if true;
+
+      // Only Emergency Responders and Admins can allocate or edit resources
+      allow create, update, delete: if isResponder();
+    }
+
+    // ========================================================
+    // 4. DEFAULT FALLBACK
+    // ========================================================
+    // Strictly deny read and write access to all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
