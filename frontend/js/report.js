@@ -1,10 +1,6 @@
-import { db } from "./firebase.js";
 
-import {
-    collection,
-    addDoc,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+// ResQCloud - Disaster Report Submission
+// Uses Firebase Compat SDK
 
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("reportForm");
@@ -13,6 +9,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!form || !submitButton || !message) {
         console.error("Report form elements could not be found.");
+        return;
+    }
+
+    // Get the initialized Firebase Firestore connection
+    const db = window.db;
+
+    if (!db || typeof firebase === "undefined") {
+        console.error("Firebase is not initialized.");
+
+        message.textContent =
+            "Cloud connection failed. Please refresh the page.";
+
+        message.style.color = "red";
         return;
     }
 
@@ -26,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
             description: document.getElementById("description").value.trim(),
             severity: document.getElementById("severity").value,
             status: "Active",
-            created_at: serverTimestamp()
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         if (
@@ -47,26 +56,36 @@ document.addEventListener("DOMContentLoaded", function () {
         message.style.color = "black";
 
         try {
-            const docRef = await addDoc(
-                collection(db, "disaster_reports"),
-                reportData
+            // Save the report to Firebase Firestore
+            const documentReference = await db
+                .collection("disaster_reports")
+                .add(reportData);
+
+            console.log(
+                "Report saved successfully. Document ID:",
+                documentReference.id
             );
 
-            console.log("Report saved to Firestore with ID:", docRef.id);
+            message.textContent =
+                "Disaster report submitted successfully!";
 
-            message.textContent = "Disaster report submitted successfully!";
             message.style.color = "green";
 
             alert("Disaster report submitted successfully!");
+
             form.reset();
 
         } catch (error) {
             console.error("Firestore submission error:", error);
 
-            message.textContent = "Report could not be saved: " + error.message;
+            message.textContent =
+                "Report could not be saved: " + error.message;
+
             message.style.color = "red";
 
-            alert("Report submission failed:\n\n" + error.message);
+            alert(
+                "Report submission failed:\n\n" + error.message
+            );
 
         } finally {
             submitButton.disabled = false;

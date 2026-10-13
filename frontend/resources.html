@@ -1,138 +1,455 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Resources | ResQCloud</title>
-    <link rel="stylesheet" href="css/style.css">
+
+    <link rel="stylesheet"
+          href="css/style.css">
+
+    <style>
+
+        .resource-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .resource-filters input,
+        .resource-filters select {
+            padding: 12px;
+            border: 1px solid #d5dce5;
+            border-radius: 8px;
+            min-width: 180px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-btn,
+        .delete-btn {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background: #1976d2;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #d32f2f;
+            color: white;
+        }
+
+    </style>
+
 </head>
+
 
 <body>
 
+
 <header class="navbar">
 
-    <div class="logo">☁️ ResQCloud</div>
+    <div class="logo">
+        ☁️ ResQCloud
+    </div>
+
 
     <nav>
-        <a href="index.html">Home</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="report.html">Report Disaster</a>
-        <a href="disasters.html">Disasters</a>
-        <a href="resources.html" class="active">Resources</a>
+
+        <a href="index.html">
+            Home
+        </a>
+
+        <a href="dashboard.html">
+            Dashboard
+        </a>
+
+        <a href="report.html">
+            Report Disaster
+        </a>
+
+        <a href="disasters.html">
+            Disasters
+        </a>
+
+        <a href="resources.html"
+           class="active">
+            Resources
+        </a>
+
     </nav>
 
-    <a href="admin.html" class="admin-btn">Admin</a>
+
+    <a href="admin.html"
+       class="admin-btn">
+        Admin
+    </a>
 
 </header>
 
 
 <main class="page">
 
+
+    <!-- Page Header -->
+
     <div class="page-header">
 
         <div>
-            <span class="section-label">EMERGENCY SUPPORT</span>
-            <h1>Emergency Resources</h1>
-            <p>Available resources for disaster response and emergency support.</p>
+
+            <span class="section-label">
+                EMERGENCY SUPPORT
+            </span>
+
+            <h1>
+                Emergency Resources
+            </h1>
+
+            <p>
+                Available resources for disaster response and emergency support.
+            </p>
+
         </div>
 
     </div>
 
+
+    <!-- Resource Cards -->
 
     <div class="resource-grid">
 
+
         <div class="resource-card">
-            <div class="resource-icon">🚑</div>
-            <h3>Ambulances</h3>
-            <strong>12 Available</strong>
-            <p>Emergency medical transportation.</p>
+
+            <div class="resource-icon">
+                🚑
+            </div>
+
+            <h3>
+                Ambulances
+            </h3>
+
+            <strong>
+                Emergency Medical Support
+            </strong>
+
+            <p>
+                Emergency medical transportation.
+            </p>
+
         </div>
 
 
         <div class="resource-card">
-            <div class="resource-icon">🚒</div>
-            <h3>Fire Services</h3>
-            <strong>8 Available</strong>
-            <p>Fire and rescue response units.</p>
+
+            <div class="resource-icon">
+                🚒
+            </div>
+
+            <h3>
+                Fire Services
+            </h3>
+
+            <strong>
+                Fire & Rescue
+            </strong>
+
+            <p>
+                Fire and rescue response units.
+            </p>
+
         </div>
 
 
         <div class="resource-card">
-            <div class="resource-icon">🚁</div>
-            <h3>Rescue Teams</h3>
-            <strong>6 Available</strong>
-            <p>Specialized disaster response teams.</p>
+
+            <div class="resource-icon">
+                🚁
+            </div>
+
+            <h3>
+                Rescue Teams
+            </h3>
+
+            <strong>
+                Disaster Response
+            </strong>
+
+            <p>
+                Specialized disaster response teams.
+            </p>
+
         </div>
 
 
         <div class="resource-card">
-            <div class="resource-icon">🏥</div>
-            <h3>Medical Support</h3>
-            <strong>16 Units</strong>
-            <p>Medical assistance and emergency supplies.</p>
+
+            <div class="resource-icon">
+                🏥
+            </div>
+
+            <h3>
+                Medical Support
+            </h3>
+
+            <strong>
+                Emergency Medical Aid
+            </strong>
+
+            <p>
+                Medical assistance and emergency supplies.
+            </p>
+
         </div>
+
 
     </div>
 
 
-    <section class="panel resource-table">
+    <!-- Add Resource -->
+
+    <section class="panel">
+
 
         <div class="panel-header">
+
             <div>
-                <h2>Resource Availability</h2>
-                <p>Current emergency resource status</p>
+
+                <h2>
+                    Add Emergency Resource
+                </h2>
+
+                <p>
+                    Add a new resource to the system
+                </p>
+
             </div>
+
         </div>
 
 
-        <table>
+        <form id="resourceForm">
+
+
+            <input
+                type="text"
+                id="resourceName"
+                placeholder="Resource name"
+                required
+            >
+
+
+            <input
+                type="text"
+                id="resourceType"
+                placeholder="Resource type"
+                required
+            >
+
+
+            <input
+                type="text"
+                id="resourceLocation"
+                placeholder="Location"
+                required
+            >
+
+
+            <input
+                type="number"
+                id="resourceQuantity"
+                placeholder="Quantity"
+                min="0"
+                required
+            >
+
+
+            <select
+                id="resourceAvailability"
+                required
+            >
+
+                <option value="">
+                    Select availability
+                </option>
+
+                <option value="Available">
+                    Available
+                </option>
+
+                <option value="Limited">
+                    Limited
+                </option>
+
+                <option value="Unavailable">
+                    Unavailable
+                </option>
+
+            </select>
+
+
+            <button type="submit">
+                Add Resource
+            </button>
+
+
+        </form>
+
+
+    </section>
+
+
+    <!-- Resource Availability -->
+
+    <section class="panel resource-table">
+
+
+        <div class="panel-header">
+
+            <div>
+
+                <h2>
+                    Resource Availability
+                </h2>
+
+                <p>
+                    Current emergency resource status
+                </p>
+
+
+                <!-- Filters -->
+
+                <div class="resource-filters">
+
+
+                    <input
+                        type="text"
+                        id="searchResource"
+                        placeholder="Search resources..."
+                        onkeyup="filterResources()"
+                    >
+
+
+                    <select
+                        id="typeFilter"
+                        onchange="filterResources()"
+                    >
+
+                        <option value="">
+                            All Types
+                        </option>
+
+                    </select>
+
+
+                    <select
+                        id="locationFilter"
+                        onchange="filterResources()"
+                    >
+
+                        <option value="">
+                            All Locations
+                        </option>
+
+                    </select>
+
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <table id="resourceTable">
+
 
             <thead>
+
                 <tr>
-                    <th>Resource</th>
-                    <th>Location</th>
-                    <th>Available</th>
-                    <th>Status</th>
+
+                    <th>
+                        Resource
+                    </th>
+
+                    <th>
+                        Type
+                    </th>
+
+                    <th>
+                        Location
+                    </th>
+
+                    <th>
+                        Available
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Actions
+                    </th>
+
                 </tr>
+
             </thead>
+
 
             <tbody>
 
-                <tr>
-                    <td>Ambulance</td>
-                    <td>Vijayawada</td>
-                    <td>5</td>
-                    <td><span class="status resolved-status">Available</span></td>
-                </tr>
-
-                <tr>
-                    <td>Fire Truck</td>
-                    <td>Guntur</td>
-                    <td>3</td>
-                    <td><span class="status resolved-status">Available</span></td>
-                </tr>
-
-                <tr>
-                    <td>Rescue Team</td>
-                    <td>Visakhapatnam</td>
-                    <td>2</td>
-                    <td><span class="status active-status">Deployed</span></td>
-                </tr>
-
             </tbody>
+
 
         </table>
 
+
     </section>
+
 
 </main>
 
 
 <footer>
-    <p>© 2026 ResQCloud. Academic Project.</p>
+
+    <p>
+        © 2026 ResQCloud. Academic Project.
+    </p>
+
 </footer>
 
-<script src="js/script.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+    console.log("Firebase SDK loading check:", typeof firebase);
+</script>
+
+<script src="js/firebase.js"></script>
+
+<script src="js/resources.js"></script>
+
 
 </body>
+
 </html>

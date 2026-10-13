@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Portal | ResQCloud</title>
+    <link rel="stylesheet" href="css/style.css">
+
+```
+<style>
+    .auth-container {
+        max-width: 480px;
+        margin: 40px auto;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 35px 30px;
+        box-shadow: 0 10px 30px rgba(23, 43, 58, 0.05);
+    }
+
+    .auth-tabs {
+        display: flex;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 25px;
+    }
+
+    .auth-tab {
+        flex: 1;
+        text-align: center;
+        padding: 12px;
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--muted);
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s ease;
+    }
+
+    .auth-tab.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+
+    .demo-helpers {
+        background: #f8fafc;
+        border: 1px dashed var(--border);
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 25px;
+    }
+
+    .demo-helpers small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+    }
+
+    .demo-btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .demo-action-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+
+    .demo-action-row span {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .demo-quick-btn {
+        background: #eef7ff;
+        color: var(--primary);
+        border: 1px solid #cbe3f7;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .demo-quick-btn:hover {
+        background: var(--primary);
+        color: #ffffff;
+    }
+</style>
+
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="logo">
+        <span>☁️</span> ResQCloud
+    </div>
+
+```
+<nav>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="report.html">Report Disaster</a>
+    <a href="disasters.html">Disasters</a>
+    <a href="resources.html">Resources</a>
+</nav>
+
+<div style="display: flex; gap: 10px; align-items: center;">
+    <a href="test-permissions.html" class="table-btn">🧪 Tests</a>
+    <a href="admin.html" class="admin-btn">Admin</a>
+</div>
+```
+
+</header>
+
+<main class="page">
+
+```
+<div class="auth-container">
+
+    <div style="text-align: center; margin-bottom: 25px;">
+        <span class="badge">SECURE ACCESS</span>
+        <h1 style="font-size: 26px; margin: 8px 0 4px;">
+            ResQCloud Portal
+        </h1>
+        <p style="color: var(--muted); font-size: 14px;">
+            Sign in or create an account to access features
+        </p>
+    </div>
+
+    <div class="auth-tabs">
+        <div
+            id="tabSignIn"
+            class="auth-tab active"
+            onclick="switchAuthTab('login')">
+            Sign In
+        </div>
+
+        <div
+            id="tabRegister"
+            class="auth-tab"
+            onclick="switchAuthTab('register')">
+            Create Account
+        </div>
+    </div>
+
+    <!-- SIGN IN FORM -->
+
+    <section id="loginTabContent">
+
+        <form id="loginForm">
+
+            <div class="form-group">
+                <label for="loginEmail">Email Address</label>
+
+                <input
+                    type="email"
+                    id="loginEmail"
+                    placeholder="Enter your email address"
+                    autocomplete="username"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+
+                <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required>
+            </div>
+
+            <button
+                type="submit"
+                class="primary-btn"
+                style="width: 100%; text-align: center;">
+                Sign In
+            </button>
+
+            <p
+                id="loginMessage"
+                role="status"
+                aria-live="polite"
+                style="margin-top: 15px; font-weight: 600; font-size: 13px;">
+            </p>
+
+        </form>
+
+        <!-- DEMO LOGIN BUTTONS -->
+
+        <div class="demo-helpers">
+
+            <small>⚡ One-Click Instant Demo Login</small>
+
+            <div class="demo-btn-group">
+
+                <div class="demo-action-row">
+                    <span>🛡️ Administrator</span>
+
+                    <div style="display: flex; gap: 6px;">
+
+                        <button
+                            type="button"
+                            class="demo-quick-btn"
+                            onclick="fillCreds('admin@resqcloud.org', 'AdminPass123!')">
+                            Fill
+                        </button>
+
+                        <button
+                            type="button"
+                            class="demo-quick-btn"
+                            style="background: #1769aa; color: white;"
+                            onclick="instantLogin('admin@resqcloud.org', 'AdminPass123!')">
+                            Instant Login ⚡
+                        </button>
+
+                    </div>
+                </div>
+
+                <div class="demo-action-row">
+                    <span>🚑 Emergency Responder</span>
+
+                    <div style="display: flex; gap: 6px;">
+
+                        <button
+                            type="button"
+                            class="demo-quick-btn"
+                            onclick="fillCreds('responder@resqcloud.org', 'Responder123!')">
+                            Fill
+                        </button>
+
+                        <button
+                            type="button"
+                            class="demo-quick-btn"
+                            style="background: #c77c00; color: white;"
+                            onclick="instantLogin('responder@resqcloud.org', 'Responder123!')">
+                            Instant Login ⚡
+                        </button>
+
+                    </div>
+                </div>
+
+                <div class="demo-action-row">
+                    <span>👥 Citizen Reporter</span>
+
+                    <div style="display: flex; gap: 6px;">
+
+                        <button
+                            type="button"
+                            class="demo-quick-btn"
+                            onclick="fillCreds('citizen@resqcloud.org', 'CitizenPass123!')">
+                            Fill
+                        </button>
+
+                        <button
+                            type="button"
+                            class="demo-quick-btn"
+                            style="background: #16834b; color: white;"
+                            onclick="instantLogin('citizen@resqcloud.org', 'CitizenPass123!')">
+                            Instant Login ⚡
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </section>
+
+    <!-- REGISTRATION FORM -->
+
+    <section id="registerTabContent" style="display: none;">
+
+        <form id="registerForm">
+
+            <div class="form-group">
+                <label for="registerName">Full Name</label>
+
+                <input
+                    type="text"
+                    id="registerName"
+                    placeholder="Enter your full name"
+                    autocomplete="name"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label for="registerEmail">Email Address</label>
+
+                <input
+                    type="email"
+                    id="registerEmail"
+                    placeholder="Enter your email"
+                    autocomplete="username"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label for="registerPassword">Password</label>
+
+                <input
+                    type="password"
+                    id="registerPassword"
+                    placeholder="At least 6 characters"
+                    autocomplete="new-password"
+                    minlength="6"
+                    required>
+            </div>
+
+            <!-- PUBLIC REGISTRATION: NO ADMIN OPTION -->
+
+            <div class="form-group">
+                <label for="registerRole">Account Role</label>
+
+                <select id="registerRole" required>
+                    <option value="Citizen" selected>
+                        Citizen (Public Reporter)
+                    </option>
+
+                    <option value="Responder">
+                        Emergency Responder (Field Unit)
+                    </option>
+                </select>
+
+                <small style="display: block; margin-top: 6px; color: var(--muted);">
+                    Administrator access is restricted to authorized accounts.
+                </small>
+            </div>
+
+            <button
+                type="submit"
+                class="primary-btn"
+                style="width: 100%; text-align: center;">
+                Create Account
+            </button>
+
+            <p
+                id="registerMessage"
+                role="status"
+                aria-live="polite"
+                style="margin-top: 15px; font-weight: 600; font-size: 13px;">
+            </p>
+
+        </form>
+
+    </section>
+
+    <div style="margin-top: 25px; text-align: center;">
+        <a
+            href="test-permissions.html"
+            style="font-size: 13px; color: var(--muted); text-decoration: underline;">
+            🧪 Open Security & Permission Test Suite
+        </a>
+    </div>
+
+</div>
+
+
+</main>
+
+<footer>
+    <div>
+        <strong>☁️ ResQCloud</strong>
+        <p>Cloud-Based Disaster Management System</p>
+    </div>
+
+
+<p>© 2026 ResQCloud. Academic Project.</p>
+
+
+</footer>
+
+<!-- AUTH TAB SWITCHING -->
+
+<script>
+    function switchAuthTab(tab) {
+        const loginTab = document.getElementById("tabSignIn");
+        const registerTab = document.getElementById("tabRegister");
+        const loginContent = document.getElementById("loginTabContent");
+        const registerContent = document.getElementById("registerTabContent");
+
+        if (tab === "register") {
+            loginTab.classList.remove("active");
+            registerTab.classList.add("active");
+
+            loginContent.style.display = "none";
+            registerContent.style.display = "block";
+        } else {
+            registerTab.classList.remove("active");
+            loginTab.classList.add("active");
+
+            registerContent.style.display = "none";
+            loginContent.style.display = "block";
+        }
+    }
+
+    function fillCreds(email, password) {
+        document.getElementById("loginEmail").value = email;
+        document.getElementById("loginPassword").value = password;
+
+        switchAuthTab("login");
+    }
+
+    async function instantLogin(email, password) {
+        fillCreds(email, password);
+
+        const msg = document.getElementById("loginMessage");
+
+        msg.style.color = "#1769aa";
+        msg.textContent = `Authenticating ${email}...`;
+
+        try {
+            const user = await window.loginUser(email, password);
+            const role = await window.getUserRole(user);
+
+            msg.style.color = "#16834b";
+            msg.textContent = `Signed in as ${role}. Redirecting...`;
+
+            const requestedRedirect =
+                new URLSearchParams(window.location.search).get("redirect");
+
+            const redirect =
+                requestedRedirect ||
+                (role === "Admin" ? "admin.html" : "dashboard.html");
+
+            setTimeout(() => {
+                window.location.href = redirect;
+            }, 600);
+
+        } catch (error) {
+            msg.style.color = "#d93025";
+
+            msg.textContent =
+                window.getFriendlyAuthErrorMessage
+                    ? window.getFriendlyAuthErrorMessage(error)
+                    : error.message;
+        }
+    }
+</script>
+
+<!-- FIREBASE COMPAT SDK -->
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<!-- APPLICATION SCRIPTS -->
+
+<script src="js/firebase.js"></script>
+
+<script src="js/auth.js"></script>
+
+</body>
+</html>

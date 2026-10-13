@@ -1,5 +1,5 @@
-<!DOCTYPE html>
 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,26 +7,25 @@
     <title>Report Disaster | ResQCloud</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
 <header class="navbar">
     <div class="logo">☁️ ResQCloud</div>
 
-```
-<nav>
-    <a href="index.html">Home</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="report.html" class="active">Report Disaster</a>
-    <a href="disasters.html">Disasters</a>
-    <a href="resources.html">Resources</a>
-</nav>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="report.html" class="active">Report Disaster</a>
+        <a href="disasters.html">Disasters</a>
+        <a href="resources.html">Resources</a>
+    </nav>
 
-<a href="admin.html" class="admin-btn">Admin</a>
-```
-
+    <a href="admin.html" class="admin-btn">Admin</a>
 </header>
 
 <main class="page">
+
     <div class="page-header">
         <div>
             <span class="section-label">EMERGENCY REPORT</span>
@@ -38,85 +37,89 @@
         </div>
     </div>
 
-```
-<section class="panel">
-    <form id="reportForm">
+    <section class="panel">
 
-        <div class="form-group">
-            <label for="name">Your Name</label>
-            <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Enter your name"
-                required
+        <form id="reportForm">
+
+            <div class="form-group">
+                <label for="name">Your Name</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Enter your name"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="disaster_type">Disaster Type</label>
+
+                <select id="disaster_type" name="disaster_type" required>
+                    <option value="">Select disaster type</option>
+                    <option value="Flood">Flood</option>
+                    <option value="Fire">Fire</option>
+                    <option value="Storm">Storm</option>
+                    <option value="Earthquake">Earthquake</option>
+                    <option value="Cyclone">Cyclone</option>
+                    <option value="Landslide">Landslide</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Location</label>
+
+                <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    placeholder="Enter disaster location"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="5"
+                    placeholder="Describe what happened..."
+                    required
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="severity">Severity</label>
+
+                <select id="severity" name="severity" required>
+                    <option value="">Select severity</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                </select>
+            </div>
+
+            <button
+                type="submit"
+                class="primary-btn"
+                id="submitReportBtn"
             >
-        </div>
+                Submit Disaster Report
+            </button>
 
-        <div class="form-group">
-            <label for="disaster_type">Disaster Type</label>
-            <select id="disaster_type" name="disaster_type" required>
-                <option value="">Select disaster type</option>
-                <option value="Flood">Flood</option>
-                <option value="Fire">Fire</option>
-                <option value="Storm">Storm</option>
-                <option value="Earthquake">Earthquake</option>
-                <option value="Cyclone">Cyclone</option>
-                <option value="Landslide">Landslide</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
+            <p
+                id="reportMessage"
+                role="status"
+                aria-live="polite"
+                style="margin-top: 15px;"
+            ></p>
 
-        <div class="form-group">
-            <label for="location">Location</label>
-            <input
-                type="text"
-                id="location"
-                name="location"
-                placeholder="Enter disaster location"
-                required
-            >
-        </div>
+        </form>
 
-        <div class="form-group">
-            <label for="description">Description</label>
-            <textarea
-                id="description"
-                name="description"
-                rows="5"
-                placeholder="Describe what happened..."
-                required
-            ></textarea>
-        </div>
-
-        <div class="form-group">
-            <label for="severity">Severity</label>
-            <select id="severity" name="severity" required>
-                <option value="">Select severity</option>
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-            </select>
-        </div>
-
-        <button
-            type="submit"
-            class="primary-btn"
-            id="submitReportBtn"
-        >
-            Submit Disaster Report
-        </button>
-
-        <p
-            id="reportMessage"
-            role="status"
-            aria-live="polite"
-            style="margin-top: 15px;"
-        ></p>
-
-    </form>
-</section>
-```
+    </section>
 
 </main>
 
@@ -124,7 +127,16 @@
     <p>© 2026 ResQCloud. Academic Project.</p>
 </footer>
 
-<script type="module" src="js/report.js"></script>
+<!-- Firebase Compat SDK: load before application scripts -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<!-- Initialize Firebase -->
+<script src="js/firebase.js"></script>
+
+<!-- Handle disaster report submission -->
+<script src="js/report.js"></script>
 
 </body>
 </html>

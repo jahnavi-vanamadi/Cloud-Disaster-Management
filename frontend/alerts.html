@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Alerts & Warnings | ResQCloud</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/disasters.css">
+    <link rel="stylesheet" href="css/alerts.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <header class="navbar">
+
+        <div class="logo">☁️ ResQCloud</div>
+
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="report.html">Report Disaster</a>
+            <a href="disaster-management.html">Disasters</a>
+            <a href="alerts.html" class="active">Alerts</a>
+            <a href="resources.html">Resources</a>
+        </nav>
+
+        <a href="admin.html" class="admin-btn">Admin</a>
+
+    </header>
+
+
+    <!-- Main Content -->
+    <main class="page">
+
+        <div class="page-header">
+
+            <div>
+                <span class="section-label">EARLY WARNING</span>
+
+                <h1>Alerts &amp; Warnings</h1>
+
+                <p>
+                    Official warnings are shown separately from
+                    unverified user reports.
+                </p>
+            </div>
+
+            <button class="primary-btn" id="notifyBtn" type="button">
+                🔔 Enable notifications
+            </button>
+
+        </div>
+
+
+        <!-- Alert Statistics -->
+        <div class="alert-stats">
+
+            <div class="stat-tile">
+                <strong id="statOfficial">0</strong>
+                <span>Official warnings</span>
+            </div>
+
+            <div class="stat-tile">
+                <strong id="statUnverified">0</strong>
+                <span>Unverified reports</span>
+            </div>
+
+            <div class="stat-tile">
+                <strong id="statHigh">0</strong>
+                <span>High severity</span>
+            </div>
+
+        </div>
+
+
+        <!-- Official Alerts -->
+        <section>
+            <h2 class="alert-heading">✔ Official Warnings</h2>
+
+            <p class="alert-sub">
+                Earthquakes of magnitude 5 and above from the USGS feed,
+                along with disaster reports verified by an administrator.
+            </p>
+
+            <div id="officialList" class="alert-list">
+                <p>Loading official warnings...</p>
+            </div>
+        </section>
+
+
+        <!-- Unverified Reports -->
+        <section>
+            <h2 class="alert-heading">⚠ Unverified Reports</h2>
+
+            <p class="alert-sub">
+                Reports submitted by the public that have not yet
+                been confirmed. Treat these reports with caution.
+            </p>
+
+            <div id="unverifiedList" class="alert-list">
+                <p>Loading community reports...</p>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- Notification Messages -->
+    <div id="toastBox" class="toast-box" aria-live="polite"></div>
+
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 ResQCloud. Academic Project.</p>
+    </footer>
+
+
+    <!-- Firebase Compat SDK: Load before firebase.js -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+   <!-- Firebase Configuration -->
+<script src="js/firebase.js"></script>
+
+<!-- Authentication and Role Management -->
+<script src="js/auth.js"></script>
+
+<!-- Emergency Alerts Logic -->
+<script src="js/alerts.js"></script>
+</body>
+</html>

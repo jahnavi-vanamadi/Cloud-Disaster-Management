@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResQCloud - Cloud Services Test</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 30px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px #00000015;
+        }
+
+        h1 { color: #0f766e; }
+
+        .service {
+            padding: 15px;
+            margin: 12px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+        }
+
+        .status {
+            font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        button {
+            background: #0f766e;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        #message {
+            margin-top: 15px;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>ResQCloud</h1>
+        <h2>Cloud Services Integration Test</h2>
+
+        <p>This page tests the cloud services configured for ResQCloud.</p>
+
+        <div class="service">
+            <h3>1. Firebase Hosting</h3>
+            <p class="status">Status: Website deployed</p>
+            <a href="https://resqcloud-3e809.web.app/" target="_blank">
+                Open ResQCloud Website
+            </a>
+        </div>
+
+        <div class="service">
+            <h3>2. Cloud Firestore</h3>
+            <p id="firestoreStatus" class="status">Status: Not tested yet</p>
+        </div>
+
+        <div class="service">
+            <h3>3. Firebase Authentication</h3>
+            <p id="authStatus" class="status">Status: Not tested yet</p>
+        </div>
+
+        <div class="service">
+            <h3>4. Firebase Realtime Database</h3>
+            <p id="realtimeStatus" class="status">Status: Not tested yet</p>
+        </div>
+
+        <button id="testButton">Test Firebase Services</button>
+        <p id="message"></p>
+    </div>
+
+    <script type="module">
+        import { db, auth } from "../frontend/js/firebase.js";
+
+        import {
+            collection,
+            getDocs,
+            query,
+            limit
+        } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+
+        import {
+            getDatabase,
+            ref,
+            get
+        } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
+
+        const firestoreStatus = document.getElementById("firestoreStatus");
+        const authStatus = document.getElementById("authStatus");
+        const realtimeStatus = document.getElementById("realtimeStatus");
+        const message = document.getElementById("message");
+        const testButton = document.getElementById("testButton");
+
+        testButton.addEventListener("click", async () => {
+            testButton.disabled = true;
+            message.textContent = "Testing cloud services...";
+
+            try {
+                const reportsQuery = query(
+                    collection(db, "disaster_reports"),
+                    limit(1)
+                );
+
+                await getDocs(reportsQuery);
+                firestoreStatus.textContent =
+                    "Status: Connected successfully";
+            } catch (error) {
+                firestoreStatus.textContent =
+                    "Status: Connection or permission error";
+                console.error("Firestore error:", error);
+            }
+
+            authStatus.textContent = auth
+                ? "Status: Firebase Authentication initialized"
+                : "Status: Not initialized";
+
+            try {
+                const realtimeDB = getDatabase(
+                    undefined,
+                    "https://resqcloud-3e809-default-rtdb.asia-southeast1.firebasedatabase.app"
+                );
+
+                // Use the exact name shown in your Firebase Console.
+                const testReference = ref(
+                    realtimeDB,
+                    "cloud_service-test"
+                );
+
+                const snapshot = await get(testReference);
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+
+                    realtimeStatus.textContent =
+                        "Status: Connected successfully. " +
+                        "Project: " + (data.project || "ResQCloud");
+                } else {
+                    realtimeStatus.textContent =
+                        "Status: Connected, but test data was not found";
+                }
+            } catch (error) {
+                realtimeStatus.textContent =
+                    "Status: Connection or permission error";
+                console.error("Realtime Database error:", error);
+            }
+
+            message.textContent =
+                "Testing complete. Check the statuses above.";
+
+            testButton.disabled = false;
+        });
+    </script>
+</body>
+</html>
