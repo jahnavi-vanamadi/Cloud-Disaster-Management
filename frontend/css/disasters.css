@@ -1,0 +1,67 @@
+/* Module 2 - Disaster Management styles (kept separate so it never clashes with style.css) */
+
+.filter-bar { flex-wrap: wrap; gap: 10px; }
+.filter-bar input { flex: 1 1 220px; }
+.filter-bar select { flex: 0 1 170px; }
+
+.result-count { color: var(--muted); font-size: 14px; margin: 8px 0 14px; }
+
+.disaster-card.clickable { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.disaster-card.clickable:hover,
+.disaster-card.clickable:focus { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,.1); outline: none; }
+
+.badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #eef2f5;
+    color: var(--text);
+}
+
+.sev-high { background: #fde7e5; color: var(--danger); }
+.sev-medium { background: #fff1d6; color: var(--warning); }
+.sev-low { background: #def3e7; color: var(--success); }
+
+.st-active { background: #fde7e5; color: var(--danger); }
+.st-monitoring { background: #fff1d6; color: var(--warning); }
+.st-resolved { background: #def3e7; color: var(--success); }
+
+.src-official { background: #dcebf7; color: var(--primary-dark); }
+.src-unverified { background: #eef2f5; color: var(--muted); }
+
+/* Details popup */
+.modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(10, 25, 40, .55);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; z-index: 1000;
+}
+.modal-backdrop[hidden] { display: none; }
+
+.modal-box {
+    position: relative;
+    background: var(--white);
+    border-radius: 14px;
+    padding: 28px;
+    width: 100%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+}
+
+.modal-close {
+    position: absolute; top: 12px; right: 14px;
+    border: none; background: none; font-size: 20px; cursor: pointer; color: var(--muted);
+}
+
+.detail-desc { margin: 12px 0; line-height: 1.5; }
+
+.detail-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+.detail-table td { padding: 8px 4px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.detail-table td:first-child { color: var(--muted); width: 38%; }
+
+.status-edit { display: flex; gap: 10px; margin-top: 6px; }
+.status-edit select { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+.status-msg { font-size: 14px; color: var(--muted); margin-top: 8px; }
