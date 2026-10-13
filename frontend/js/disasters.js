@@ -1,204 +1,176 @@
-const API_URL = "http://127.0.0.1:8000";
 
-let allReports = [];
+// ResQCloud - Disaster Management
+// Loads disaster reports directly from Firebase Firestore.
 
-
-// Load reports from backend
-async function loadDisasterReports() {
-
-    try {
-
-        const response = await fetch(`${API_URL}/reports/`);
-
-        if (!response.ok) {
-            throw new Error("Failed to fetch reports");
-        }
-
-        const data = await response.json();
-
-        allReports = data.reports || [];
-
-        console.log("Reports loaded:", allReports);
-
-        displayReports(allReports);
-
-    } catch (error) {
-
-        console.error("Error:", error);
-
-        document.getElementById("disasterList").innerHTML =
-            "<p>Unable to load disaster reports.</p>";
-    }
-}
-
-
-// Display reports
-function displayReports(reports) {
-
+document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("disasterList");
+    const searchInput = document.getElementById("searchDisaster");
+    const typeFilter = document.getElementById("typeFilter");
+    const severityFilter = document.getElementById("statusFilter");
 
-    container.innerHTML = "";
+    let allReports = [];
 
-    if (reports.length === 0) {
-
-        container.innerHTML =
-            "<p>No disaster reports found.</p>";
-
+    if (!container) {
+        console.error("Disaster list container was not found.");
         return;
     }
 
+    const db = window.db;
 
-    reports.slice().reverse().forEach(report => {
+    if (!db) {
+        console.error("Firebase Firestore is not initialized.");
+        container.textContent = "Cloud connection failed. Please refresh.";
+        return;
+    }
 
-        let icon = "🚨";
+    // Format Firestore timestamps safely.
+    function formatDate(value) {
+        if (!value) return "Date unavailable";
 
-        const type = (report.disaster_type || "").toLowerCase();
+        let date;
 
-
-        if (type.includes("flood")) {
-            icon = "🌊";
-        }
-        else if (type.includes("fire")) {
-            icon = "🔥";
-        }
-        else if (
-            type.includes("storm") ||
-            type.includes("cyclone")
-        ) {
-            icon = "🌪️";
-        }
-        else if (type.includes("earthquake")) {
-            icon = "🏚️";
-        }
-        else if (type.includes("landslide")) {
-            icon = "⛰️";
+        if (typeof value.toDate === "function") {
+            date = value.toDate();
+        } else {
+            date = new Date(value);
         }
 
+        if (Number.isNaN(date.getTime())) {
+            return "Date unavailable";
+        }
 
-        const card = document.createElement("div");
+        return date.toLocaleString();
+    }
 
-        card.className = "disaster-card";
+    // Choose an icon based on disaster type.
+    function getDisasterIcon(type) {
+        const value = (type || "").toLowerCase();
 
+        if (value.includes("flood")) return "🌊";
+        if (value.includes("fire")) return "🔥";
+        if (value.includes("storm") || value.includes("cyclone")) {
+            return "🌪️";
+        }
+        if (value.includes("earthquake")) return "🏚️";
+        if (value.includes("landslide")) return "⛰️";
 
-        card.innerHTML = `
+        return "🚨";
+    }
 
-            <div class="disaster-top">
+    // Safely display report data.
+    function displayReports(reports) {
+        container.replaceChildren();
 
-                <span class="disaster-type">
-                    ${icon} ${report.disaster_type}
-                </span>
+        if (reports.length === 0) {
+            container.textContent = "No disaster reports found.";
+            return;
+        }
 
-                <span class="status active-status">
-                    ${report.severity}
-                </span>
+        reports.forEach(function (report) {
+            const card = document.createElement("div");
+            card.className = "disaster-card";
 
-            </div>
+            const top = document.createElement("div");
+            top.className = "disaster-top";
 
+            const type = document.createElement("span");
+            type.className = "disaster-type";
+            type.textContent =
+                `${getDisasterIcon(report.disaster_type)} ${report.disaster_type || "Unknown disaster"}`;
 
-            <h3>${report.description}</h3>
+            const severity = document.createElement("span");
+            severity.className = "status active-status";
+            severity.textContent = report.severity || "Unknown severity";
 
+            top.append(type, severity);
 
-            <p>
-                Reported by: ${report.name}
-            </p>
+            const description = document.createElement("h3");
+            description.textContent =
+                report.description || "No description provided.";
 
+            const reporter = document.createElement("p");
+            reporter.textContent =
+                `Reported by: ${report.name || "Unknown"}`;
 
-            <div class="disaster-meta">
+            const meta = document.createElement("div");
+            meta.className = "disaster-meta";
 
-                <span>
-                    📍 ${report.location}
-                </span>
+            const location = document.createElement("span");
+            location.textContent =
+                `📍 ${report.location || "Location unavailable"}`;
 
-                <span>
-                    🕐 ${new Date(report.created_at).toLocaleString()}
-                </span>
+            const date = document.createElement("span");
+            date.textContent = `🕐 ${formatDate(report.created_at)}`;
 
-            </div>
+            const status = document.createElement("p");
+            status.textContent = `Status: ${report.status || "Active"}`;
 
-        `;
+            meta.append(location, date);
+            card.append(top, description, reporter, meta, status);
 
+            container.appendChild(card);
+        });
+    }
 
-        container.appendChild(card);
+    // Apply search and filters.
+    function filterReports() {
+        const search = (searchInput?.value || "").toLowerCase().trim();
+        const selectedType = (typeFilter?.value || "all").toLowerCase();
+        const selectedSeverity =
+            (severityFilter?.value || "all").toLowerCase();
 
-    });
-}
+        const filtered = allReports.filter(function (report) {
+            const disasterType =
+                (report.disaster_type || "").toLowerCase();
 
+            const location = (report.location || "").toLowerCase();
+            const description = (report.description || "").toLowerCase();
+            const reporter = (report.name || "").toLowerCase();
+            const severity = (report.severity || "").toLowerCase();
 
-// Search and filters
-function filterReports() {
+            const matchesSearch =
+                disasterType.includes(search) ||
+                location.includes(search) ||
+                description.includes(search) ||
+                reporter.includes(search);
 
-    const search =
-        document
-            .getElementById("searchDisaster")
-            .value
-            .toLowerCase();
+            const matchesType =
+                selectedType === "all" ||
+                disasterType === selectedType;
 
-    const type =
-        document
-            .getElementById("typeFilter")
-            .value
-            .toLowerCase();
+            const matchesSeverity =
+                selectedSeverity === "all" ||
+                severity === selectedSeverity;
 
-    const severity =
-        document
-            .getElementById("statusFilter")
-            .value
-            .toLowerCase();
+            return matchesSearch && matchesType && matchesSeverity;
+        });
 
+        displayReports(filtered);
+    }
 
-    const filtered = allReports.filter(report => {
+    searchInput?.addEventListener("input", filterReports);
+    typeFilter?.addEventListener("change", filterReports);
+    severityFilter?.addEventListener("change", filterReports);
 
-        const disasterType =
-            (report.disaster_type || "").toLowerCase();
+    // Subscribe to Firestore so newly submitted reports appear automatically.
+    db.collection("disaster_reports")
+        .orderBy("created_at", "desc")
+        .onSnapshot(
+            function (snapshot) {
+                allReports = snapshot.docs.map(function (doc) {
+                    return {
+                        id: doc.id,
+                        ...doc.data()
+                    };
+                });
 
-        const location =
-            (report.location || "").toLowerCase();
-
-        const reportSeverity =
-            (report.severity || "").toLowerCase();
-
-
-        const matchesSearch =
-            disasterType.includes(search) ||
-            location.includes(search);
-
-
-        const matchesType =
-            type === "all" ||
-            disasterType.includes(type);
-
-
-        const matchesSeverity =
-            severity === "all" ||
-            reportSeverity === severity;
-
-
-        return (
-            matchesSearch &&
-            matchesType &&
-            matchesSeverity
+                console.log("Firestore disaster reports loaded:", allReports);
+                filterReports();
+            },
+            function (error) {
+                console.error("Could not load Firestore reports:", error);
+                container.textContent =
+                    "Unable to load disaster reports. Please check the console.";
+            }
         );
-
-    });
-
-
-    displayReports(filtered);
-}
-
-
-// Connect filters
-document
-    .getElementById("searchDisaster")
-    .addEventListener("input", filterReports);
-
-document
-    .getElementById("typeFilter")
-    .addEventListener("change", filterReports);
-
-document
-    .getElementById("statusFilter")
-    .addEventListener("change", filterReports);
-
-
-// Start
-loadDisasterReports();
+});

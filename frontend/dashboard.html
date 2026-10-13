@@ -1,177 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Dashboard | ResQCloud</title>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-<header class="navbar">
-    <div class="logo">☁️ ResQCloud</div>
+    <!-- Navigation -->
+    <header class="navbar">
+        <div class="logo">☁️ ResQCloud</div>
 
-    <nav>
-        <a href="index.html">Home</a>
-        <a href="dashboard.html" class="active">Dashboard</a>
-        <a href="report.html">Report Disaster</a>
-        <a href="disasters.html">Disasters</a>
-        <a href="resources.html">Resources</a>
-    </nav>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="report.html">Report Disaster</a>
+            <a href="disasters.html">Disasters</a>
+            <a href="resources.html">Resources</a>
+        </nav>
 
-    <a href="admin.html" class="admin-btn">Admin</a>
-</header>
-
-
-<main class="page">
-
-    <div class="page-header">
-        <div>
-            <span class="section-label">OVERVIEW</span>
-            <h1>Disaster Dashboard</h1>
-            <p>Live disaster activity and analytics from submitted reports.</p>
-        </div>
-
-        <a href="report.html" class="primary-btn">+ Report Disaster</a>
-    </div>
+        <a href="admin.html" class="admin-btn">Admin</a>
+    </header>
 
 
-    <div class="stats-grid">
+    <!-- Main Dashboard -->
+    <main class="page">
 
-        <div class="stat-card">
-            <span class="stat-icon">🚨</span>
-            <small>Total Reports</small>
-            <h2 id="totalReports">Loading...</h2>
-            <p>Reported incidents</p>
-        </div>
-
-        <div class="stat-card">
-            <span class="stat-icon">🔴</span>
-            <small>Active</small>
-            <h2 id="activeReports">Loading...</h2>
-            <p>Currently active</p>
-        </div>
-
-        <div class="stat-card">
-            <span class="stat-icon">🟢</span>
-            <small>Resolved</small>
-            <h2 id="resolvedReports">Loading...</h2>
-            <p>Successfully resolved</p>
-        </div>
-
-        <div class="stat-card">
-            <span class="stat-icon">⚠️</span>
-            <small>High Severity</small>
-            <h2 id="highReports">Loading...</h2>
-            <p>Need urgent attention</p>
-        </div>
-
-    </div>
-
-
-    <section class="dashboard-grid">
-
-        <div class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Recent Reports</h2>
-                    <p>Latest five reports</p>
-                </div>
-                <a href="disasters.html">View All</a>
-            </div>
-
-            <div id="recentReports">
-                <p>Loading reports...</p>
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Disaster Types</h2>
-                    <p>Reports by category</p>
-                </div>
-            </div>
-
-            <div id="typeChart">
-                <p>Loading...</p>
-            </div>
-        </div>
-
-    </section>
-
-
-    <section class="dashboard-grid">
-
-        <div class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Severity</h2>
-                    <p>How serious the reports are</p>
-                </div>
-            </div>
-
-            <div id="severityChart">
-                <p>Loading...</p>
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Top Locations</h2>
-                    <p>Places with the most reports</p>
-                </div>
-            </div>
-
-            <div id="locationChart">
-                <p>Loading...</p>
-            </div>
-        </div>
-
-    </section>
-
-
-    <section class="panel">
-
-        <div class="panel-header">
+        <div class="page-header">
             <div>
-                <h2>Reports Over Time</h2>
-                <p>Line: total reports. Bars: new reports per day.</p>
+                <span class="section-label">OVERVIEW</span>
+                <h1>Disaster Dashboard</h1>
+                <p>Live disaster activity and analytics from submitted reports.</p>
             </div>
 
-            <div class="range-btns">
-                <button type="button" data-days="7" class="active">7D</button>
-                <button type="button" data-days="14">14D</button>
-                <button type="button" data-days="30">30D</button>
+            <a href="report.html" class="primary-btn">
+                + Report Disaster
+            </a>
+        </div>
+
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <span class="stat-icon">🚨</span>
+                <small>Total Reports</small>
+                <h2 id="totalReports">Loading...</h2>
+                <p>Reported incidents</p>
             </div>
+
+            <div class="stat-card">
+                <span class="stat-icon">🔴</span>
+                <small>Active</small>
+                <h2 id="activeReports">Loading...</h2>
+                <p>Currently active</p>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-icon">🟢</span>
+                <small>Resolved</small>
+                <h2 id="resolvedReports">Loading...</h2>
+                <p>Successfully resolved</p>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-icon">⚠️</span>
+                <small>High Severity</small>
+                <h2 id="highReports">Loading...</h2>
+                <p>Need urgent attention</p>
+            </div>
+
         </div>
 
-        <div style="position:relative; height:320px;">
-            <canvas id="trendChart"></canvas>
-        </div>
 
-    </section>
+        <!-- Recent Reports and Disaster Types -->
+        <section class="dashboard-grid">
 
-</main>
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Recent Reports</h2>
+                        <p>Latest five reports</p>
+                    </div>
+
+                    <a href="disasters.html">View All</a>
+                </div>
+
+                <div id="recentReports">
+                    <p>Loading reports...</p>
+                </div>
+            </div>
 
 
-<footer>
-    <p>© 2026 ResQCloud. Academic Project.</p>
-</footer>
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Disaster Types</h2>
+                        <p>Reports by category</p>
+                    </div>
+                </div>
+
+                <div id="typeChart">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+        </section>
 
 
-<style>
-    .range-btns { display: flex; gap: 6px; }
-    .range-btns button {
-        padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px;
-        background: #fff; color: #334155; cursor: pointer; font-weight: 600;
-    }
-    .range-btns button.active { background: #16a34a; border-color: #16a34a; color: #fff; }
-</style>
+        <!-- Severity and Locations -->
+        <section class="dashboard-grid">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script type="module" src="js/dashboard.js"></script>
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Severity</h2>
+                        <p>How serious the reports are</p>
+                    </div>
+                </div>
+
+                <div id="severityChart">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Top Locations</h2>
+                        <p>Places with the most reports</p>
+                    </div>
+                </div>
+
+                <div id="locationChart">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- Reports Over Time -->
+        <section class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Reports Over Time</h2>
+                    <p>
+                        Line: total reports.
+                        Bars: new reports per day.
+                    </p>
+                </div>
+
+                <div class="range-btns">
+                    <button type="button" data-days="7" class="active">
+                        7D
+                    </button>
+
+                    <button type="button" data-days="14">
+                        14D
+                    </button>
+
+                    <button type="button" data-days="30">
+                        30D
+                    </button>
+                </div>
+            </div>
+
+            <div style="position: relative; height: 320px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 ResQCloud. Academic Project.</p>
+    </footer>
+
+
+    <!-- Chart Button Styles -->
+    <style>
+        .range-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .range-btns button {
+            padding: 6px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #fff;
+            color: #334155;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .range-btns button.active {
+            background: #16a34a;
+            border-color: #16a34a;
+            color: #fff;
+        }
+    </style>
+
+
+    <!-- ========================================= -->
+    <!-- Firebase SDK: Load Before Application Code -->
+    <!-- ========================================= -->
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+
+    <!-- Firebase Initialization -->
+    <script src="js/firebase.js"></script>
+
+
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+
+    <!-- Dashboard JavaScript -->
+    <script src="js/dashboard.js"></script>
+
 </body>
+
 </html>

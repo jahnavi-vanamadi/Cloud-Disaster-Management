@@ -1,304 +1,474 @@
 // =====================================================
-// Alerts (part of Module 2)
-//   * Official warnings  = USGS earthquakes (M5+) + admin-verified reports
-//   * Unverified reports = public reports nobody has confirmed yet
-//   * Verify button      = admin confirms a report -> becomes official
-//   * Notification       = popup (+ browser notification) when a NEW
-//                          High-severity report arrives
-// Data: Cloud Firestore collection "disaster_reports" + USGS feed
+// ResQCloud - Emergency Alerts
+// Firebase Compat SDK + USGS Earthquake Feed
 // =====================================================
 
-import { db, auth } from "./firebase.js";
+document.addEventListener("DOMContentLoaded", () => {
+    const db = window.db;
+    const auth = window.auth;
 
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    doc,
-    updateDoc,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    const USGS_URL =
+        "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson";
 
+    const MIN_OFFICIAL_MAGNITUDE = 5;
 
-// ---------- Settings ----------
+    const RANK = {
+        high: 3,
+        medium: 2,
+        low: 1
+    };
 
-// Set to true once Module 1 login works, so only logged-in admins can verify.
-const REQUIRE_LOGIN_FOR_VERIFY = false;
+    let communityReports = [];
+    let usgsAlerts = [];
+    let firstSnapshot = true;
 
-const USGS_URL =
-    "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson";
+    // =====================================================
+    // HELPERS
+    // =====================================================
 
-const MIN_OFFICIAL_MAGNITUDE = 5;
-
-const RANK = { high: 3, medium: 2, low: 1 };
-
-
-// ---------- State ----------
-
-let communityReports = [];
-let usgsAlerts = [];
-let currentUser = null;
-let firstSnapshot = true;
-
-
-// ---------- Helpers ----------
-
-function esc(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
-
-function iconFor(type) {
-    const t = (type || "").toLowerCase();
-    if (t.includes("flood")) return "🌊";
-    if (t.includes("fire")) return "🔥";
-    if (t.includes("storm") || t.includes("cyclone")) return "🌪️";
-    if (t.includes("earthquake")) return "🏚️";
-    if (t.includes("landslide")) return "⛰️";
-    return "🚨";
-}
-
-function toMillis(value) {
-    const date = value?.toDate ? value.toDate() : value ? new Date(value) : null;
-    return date && !isNaN(date) ? date.getTime() : Date.now();
-}
-
-function formatTime(value) {
-    return new Date(toMillis(value)).toLocaleString();
-}
-
-function sevKey(severity) {
-    return (severity || "low").toLowerCase();
-}
-
-function bySeverityThenTime(a, b) {
-    return (
-        (RANK[sevKey(b.severity)] || 0) - (RANK[sevKey(a.severity)] || 0) ||
-        toMillis(b.created_at) - toMillis(a.created_at)
-    );
-}
-
-
-// ---------- Load data ----------
-
-function listenToFirestore() {
-    const q = query(
-        collection(db, "disaster_reports"),
-        orderBy("created_at", "desc")
-    );
-
-    onSnapshot(
-        q,
-        (snapshot) => {
-            // Notification workflow: tell the user about NEW high-severity reports
-            if (!firstSnapshot) {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
-                        const d = change.doc.data();
-                        if (sevKey(d.severity) === "high") notifyNewAlert(d);
-                    }
-                });
-            }
-            firstSnapshot = false;
-
-            communityReports = snapshot.docs.map((d) => ({
-                id: d.id,
-                source: "community",
-                name: "Community report",
-                ...d.data(),
-                verified: d.data().verified === true
-            }));
-            render();
-        },
-        (error) => {
-            console.error("Firestore error:", error);
-            const msg = "<p>Unable to load alerts. " + esc(error.message) + "</p>";
-            document.getElementById("officialList").innerHTML = msg;
-            document.getElementById("unverifiedList").innerHTML = "";
-        }
-    );
-}
-
-async function loadUSGS() {
-    try {
-        const response = await fetch(USGS_URL);
-        if (!response.ok) throw new Error("USGS request failed");
-        const data = await response.json();
-
-        usgsAlerts = (data.features || [])
-            .filter((f) => (f.properties.mag ?? 0) >= MIN_OFFICIAL_MAGNITUDE)
-            .map((f) => {
-                const mag = f.properties.mag;
-                return {
-                    id: "usgs-" + f.id,
-                    source: "usgs",
-                    verified: true,
-                    disaster_type: "Earthquake",
-                    location: f.properties.place || "Unknown location",
-                    description: f.properties.title || "Earthquake",
-                    severity: mag >= 6 ? "High" : "Medium",
-                    created_at: f.properties.time,
-                    url: f.properties.url
-                };
-            });
-        render();
-    } catch (error) {
-        console.warn("USGS feed unavailable:", error);
-        render();
+    function esc(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
     }
-}
 
+    function iconFor(type) {
+        const t = (type || "").toLowerCase();
 
-// ---------- Display ----------
+        if (t.includes("flood")) return "🌊";
+        if (t.includes("fire")) return "🔥";
+        if (t.includes("storm") || t.includes("cyclone")) return "🌪️";
+        if (t.includes("earthquake")) return "🏚️";
+        if (t.includes("landslide")) return "⛰️";
 
-function alertCard(r, official) {
-    const sev = sevKey(r.severity);
+        return "🚨";
+    }
 
-    const label = r.source === "usgs"
-        ? "✔ Official · USGS"
-        : official
-            ? "✔ Verified by admin"
-            : "Unverified, not confirmed";
+    function toMillis(value) {
+        if (value && typeof value.toDate === "function") {
+            return value.toDate().getTime();
+        }
 
-    const verifyButton =
-        !official && (!REQUIRE_LOGIN_FOR_VERIFY || currentUser)
-            ? `<button class="verify-btn" data-id="${esc(r.id)}">Verify</button>`
+        if (value) {
+            const date = new Date(value);
+
+            if (!isNaN(date.getTime())) {
+                return date.getTime();
+            }
+        }
+
+        return 0;
+    }
+
+    function formatTime(value) {
+        const millis = toMillis(value);
+
+        return millis
+            ? new Date(millis).toLocaleString()
+            : "Time unavailable";
+    }
+
+    function sevKey(severity) {
+        return (severity || "low").toLowerCase();
+    }
+
+    function bySeverityThenTime(a, b) {
+        return (
+            (RANK[sevKey(b.severity)] || 0) -
+                (RANK[sevKey(a.severity)] || 0) ||
+            toMillis(b.created_at) - toMillis(a.created_at)
+        );
+    }
+
+    // =====================================================
+    // NOTIFICATION MESSAGE
+    // =====================================================
+
+    function showToast(title, message) {
+        const box = document.getElementById("toastBox");
+
+        if (!box) return;
+
+        const toast = document.createElement("div");
+        toast.className = "toast";
+
+        const heading = document.createElement("strong");
+        heading.textContent = title;
+
+        const content = document.createElement("div");
+        content.textContent = message;
+
+        toast.append(heading, content);
+        box.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 8000);
+    }
+
+    function notifyNewAlert(report) {
+        const title =
+            `🚨 New HIGH alert: ${report.disaster_type || "Disaster"}`;
+
+        const message =
+            `${report.location || ""} - ${report.description || ""}`;
+
+        showToast(title, message);
+
+        if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+        ) {
+            new Notification(title, {
+                body: message
+            });
+        }
+    }
+
+    // =====================================================
+    // ALERT CARD
+    // =====================================================
+
+    function alertCard(report, official) {
+        const severity = sevKey(report.severity);
+
+        let label;
+
+        if (report.source === "usgs") {
+            label = "✔ Official · USGS";
+        } else if (official) {
+            label = "✔ Verified by admin";
+        } else {
+            label = "Unverified, not confirmed";
+        }
+
+        // Verification requires a signed-in user.
+        // Firestore rules must also authorize the update.
+        const verifyButton = !official
+            ? `<button class="verify-btn"
+                       data-id="${esc(report.id)}"
+                       type="button">Verify</button>`
             : "";
 
-    return `
-    <div class="alert-item ${official ? "official" : "unverified"} ${sev}">
-        <div class="alert-main">
-            <h3>${iconFor(r.disaster_type)} ${esc(r.disaster_type)}: ${esc(r.description)}</h3>
-            <div class="badge-row">
-                <span class="badge sev-${sev}">${esc(r.severity)}</span>
-                <span class="badge ${official ? "src-official" : "src-unverified"}">${label}</span>
-                ${r.status ? `<span class="badge st-${esc(r.status.toLowerCase())}">${esc(r.status)}</span>` : ""}
+        return `
+            <div class="alert-item ${official ? "official" : "unverified"} ${severity}">
+
+                <div class="alert-main">
+
+                    <h3>
+                        ${iconFor(report.disaster_type)}
+                        ${esc(report.disaster_type)}:
+                        ${esc(report.description)}
+                    </h3>
+
+                    <div class="badge-row">
+
+                        <span class="badge sev-${severity}">
+                            ${esc(report.severity)}
+                        </span>
+
+                        <span class="badge ${official ? "src-official" : "src-unverified"}">
+                            ${label}
+                        </span>
+
+                        ${
+                            report.status
+                                ? `<span class="badge st-${esc(report.status.toLowerCase())}">
+                                       ${esc(report.status)}
+                                   </span>`
+                                : ""
+                        }
+
+                    </div>
+
+                    <div class="alert-meta">
+                        📍 ${esc(report.location)}
+                        &nbsp; 🕐 ${esc(formatTime(report.created_at))}
+
+                        ${
+                            report.url
+                                ? `&nbsp; <a href="${esc(report.url)}"
+                                       target="_blank"
+                                       rel="noopener noreferrer">Source</a>`
+                                : ""
+                        }
+                    </div>
+
+                </div>
+
+                ${verifyButton}
+
             </div>
-            <div class="alert-meta">
-                📍 ${esc(r.location)} &nbsp; 🕐 ${esc(formatTime(r.created_at))}
-                ${r.url ? ` &nbsp; <a href="${esc(r.url)}" target="_blank" rel="noopener">Source</a>` : ""}
-            </div>
-        </div>
-        ${verifyButton}
-    </div>`;
-}
-
-function render() {
-    // Resolved incidents are no longer alerts
-    const active = communityReports.filter(
-        (r) => (r.status || "Active").toLowerCase() !== "resolved"
-    );
-
-    const official = [
-        ...usgsAlerts,
-        ...active.filter((r) => r.verified)
-    ].sort(bySeverityThenTime);
-
-    const unverified = active
-        .filter((r) => !r.verified && ["high", "medium"].includes(sevKey(r.severity)))
-        .sort(bySeverityThenTime);
-
-    document.getElementById("officialList").innerHTML = official.length
-        ? official.map((r) => alertCard(r, true)).join("")
-        : "<p>No official warnings right now.</p>";
-
-    document.getElementById("unverifiedList").innerHTML = unverified.length
-        ? unverified.map((r) => alertCard(r, false)).join("")
-        : "<p>No unverified reports waiting.</p>";
-
-    document.getElementById("statOfficial").textContent = official.length;
-    document.getElementById("statUnverified").textContent = unverified.length;
-    document.getElementById("statHigh").textContent =
-        [...official, ...unverified].filter((r) => sevKey(r.severity) === "high").length;
-}
-
-
-// ---------- Verify (admin) ----------
-
-async function verifyReport(id, button) {
-    button.disabled = true;
-    button.textContent = "Verifying...";
-
-    try {
-        await updateDoc(doc(db, "disaster_reports", id), {
-            verified: true,
-            verified_at: serverTimestamp()
-        });
-        // onSnapshot refreshes the page automatically
-    } catch (error) {
-        console.error("Verify failed:", error);
-        button.disabled = false;
-        button.textContent = "Verify";
-        showToast("Could not verify", error.message);
-    }
-}
-
-
-// ---------- Notifications ----------
-
-function showToast(title, text) {
-    const box = document.getElementById("toastBox");
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.innerHTML = `<strong>${esc(title)}</strong>${esc(text)}`;
-    box.appendChild(toast);
-    setTimeout(() => toast.remove(), 8000);
-}
-
-function notifyNewAlert(report) {
-    const title = `🚨 New HIGH alert: ${report.disaster_type || "Disaster"}`;
-    const text = `${report.location || ""} - ${report.description || ""}`;
-
-    showToast(title, text);
-
-    if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, { body: text });
-    }
-}
-
-function setupNotifyButton() {
-    const button = document.getElementById("notifyBtn");
-
-    if (!("Notification" in window)) {
-        button.hidden = true;
-        return;
-    }
-    if (Notification.permission === "granted") {
-        button.textContent = "🔔 Notifications on";
+        `;
     }
 
-    button.addEventListener("click", async () => {
-        const result = await Notification.requestPermission();
-        button.textContent =
-            result === "granted" ? "🔔 Notifications on" : "🔕 Notifications blocked";
-    });
-}
+    // =====================================================
+    // DISPLAY ALERTS
+    // =====================================================
 
+    function render() {
+        const officialList = document.getElementById("officialList");
+        const unverifiedList = document.getElementById("unverifiedList");
 
-// ---------- Events ----------
+        if (!officialList || !unverifiedList) {
+            console.error("Alert list elements are missing from alerts.html.");
+            return;
+        }
 
-document.addEventListener("click", (e) => {
-    const button = e.target.closest(".verify-btn");
-    if (button) verifyReport(button.dataset.id, button);
-});
+        // Exclude resolved reports.
+        const activeReports = communityReports.filter(report =>
+            (report.status || "Active").toLowerCase() !== "resolved"
+        );
 
-import("https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js")
-    .then(({ onAuthStateChanged }) => {
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
+        // Official alerts include USGS events and verified reports.
+        const official = [
+            ...usgsAlerts,
+            ...activeReports.filter(report => report.verified)
+        ].sort(bySeverityThenTime);
+
+        // Show unverified high/medium severity reports separately.
+        const unverified = activeReports
+            .filter(report =>
+                !report.verified &&
+                ["high", "medium"].includes(sevKey(report.severity))
+            )
+            .sort(bySeverityThenTime);
+
+        officialList.innerHTML = official.length
+            ? official.map(report => alertCard(report, true)).join("")
+            : "<p>No official warnings right now.</p>";
+
+        unverifiedList.innerHTML = unverified.length
+            ? unverified.map(report => alertCard(report, false)).join("")
+            : "<p>No unverified reports waiting.</p>";
+
+        document.getElementById("statOfficial").textContent =
+            official.length;
+
+        document.getElementById("statUnverified").textContent =
+            unverified.length;
+
+        document.getElementById("statHigh").textContent =
+            [...official, ...unverified].filter(
+                report => sevKey(report.severity) === "high"
+            ).length;
+    }
+
+    // =====================================================
+    // FIRESTORE COMMUNITY REPORTS
+    // =====================================================
+
+    function listenToFirestore() {
+        if (!db) {
+            console.error(
+                "Firestore is not initialized. Check js/firebase.js."
+            );
+
+            document.getElementById("officialList").innerHTML =
+                "<p>Firebase connection failed. Check the Firebase configuration.</p>";
+
+            document.getElementById("unverifiedList").innerHTML = "";
+            return;
+        }
+
+        db.collection("disaster_reports")
+            .orderBy("created_at", "desc")
+            .onSnapshot(
+                snapshot => {
+                    // Notify only about new high-severity reports
+                    // after the initial Firestore load.
+                    if (!firstSnapshot) {
+                        snapshot.docChanges().forEach(change => {
+                            if (change.type === "added") {
+                                const report = change.doc.data();
+
+                                if (sevKey(report.severity) === "high") {
+                                    notifyNewAlert(report);
+                                }
+                            }
+                        });
+                    }
+
+                    firstSnapshot = false;
+
+                    communityReports = snapshot.docs.map(document => ({
+                        id: document.id,
+                        source: "community",
+                        name: "Community report",
+                        ...document.data(),
+                        verified: document.data().verified === true
+                    }));
+
+                    render();
+                },
+                error => {
+                    console.error("Firestore error:", error);
+
+                    document.getElementById("officialList").innerHTML =
+                        `<p>Unable to load community alerts: ${esc(error.message)}</p>`;
+
+                    document.getElementById("unverifiedList").innerHTML =
+                        "<p>Community reports could not be loaded.</p>";
+                }
+            );
+    }
+
+    // =====================================================
+    // OFFICIAL USGS EARTHQUAKE FEED
+    // =====================================================
+
+    async function loadUSGS() {
+        const officialList = document.getElementById("officialList");
+
+        try {
+            const response = await fetch(USGS_URL);
+
+            if (!response.ok) {
+                throw new Error(`USGS request failed: HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            usgsAlerts = (data.features || [])
+                .filter(feature =>
+                    (feature.properties.mag ?? 0) >= MIN_OFFICIAL_MAGNITUDE
+                )
+                .map(feature => {
+                    const properties = feature.properties;
+
+                    return {
+                        id: "usgs-" + feature.id,
+                        source: "usgs",
+                        verified: true,
+                        disaster_type: "Earthquake",
+                        location: properties.place || "Unknown location",
+                        description: properties.title || "Earthquake",
+                        severity: properties.mag >= 6 ? "High" : "Medium",
+                        created_at: properties.time,
+                        url: properties.url
+                    };
+                });
+
             render();
+
+        } catch (error) {
+            console.error("USGS feed unavailable:", error);
+
+            if (officialList && usgsAlerts.length === 0) {
+                officialList.innerHTML =
+                    "<p>USGS earthquake feed is temporarily unavailable. Community alerts may still appear below.</p>";
+            }
+
+            render();
+        }
+    }
+
+    // =====================================================
+    // VERIFY COMMUNITY REPORT
+    // =====================================================
+
+    async function verifyReport(id, button) {
+        if (!auth || !auth.currentUser) {
+            showToast(
+                "Login required",
+                "Please sign in before attempting to verify a report."
+            );
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Verifying...";
+
+        try {
+            await db.collection("disaster_reports")
+                .doc(id)
+                .update({
+                    verified: true,
+                    verified_at:
+                        firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+            // The Firestore listener will refresh the alert automatically.
+
+        } catch (error) {
+            console.error("Verification failed:", error);
+
+            button.disabled = false;
+            button.textContent = "Verify";
+
+            showToast(
+                "Could not verify",
+                "Firestore rejected the update. Check your security rules."
+            );
+        }
+    }
+
+    // =====================================================
+    // BROWSER NOTIFICATIONS
+    // =====================================================
+
+    function setupNotifyButton() {
+        const button = document.getElementById("notifyBtn");
+
+        if (!button) return;
+
+        if (!("Notification" in window)) {
+            button.hidden = true;
+            return;
+        }
+
+        if (Notification.permission === "granted") {
+            button.textContent = "🔔 Notifications on";
+        }
+
+        button.addEventListener("click", async () => {
+            try {
+                const permission =
+                    await Notification.requestPermission();
+
+                button.textContent = permission === "granted"
+                    ? "🔔 Notifications on"
+                    : "🔕 Notifications blocked";
+            } catch (error) {
+                console.error("Notification permission error:", error);
+
+                showToast(
+                    "Notifications unavailable",
+                    "Your browser could not enable notifications."
+                );
+            }
         });
-    })
-    .catch(() => {});
+    }
 
+    // =====================================================
+    // EVENT LISTENERS
+    // =====================================================
 
-// ---------- Start ----------
+    document.addEventListener("click", event => {
+        const button = event.target.closest(".verify-btn");
 
-setupNotifyButton();
-listenToFirestore();
-loadUSGS();
+        if (button) {
+            verifyReport(button.dataset.id, button);
+        }
+    });
+
+    if (auth) {
+        auth.onAuthStateChanged(user => {
+            console.log(
+                "Alerts authentication status:",
+                user ? "Signed in" : "Not signed in"
+            );
+        });
+    }
+
+    // =====================================================
+    // START
+    // =====================================================
+
+    setupNotifyButton();
+    listenToFirestore();
+    loadUSGS();
+});

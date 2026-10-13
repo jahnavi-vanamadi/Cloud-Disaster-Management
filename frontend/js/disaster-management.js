@@ -1,395 +1,603 @@
+
 // =====================================================
-// Module 2 - Disaster Management
-//   * Disaster listing + details popup
-//   * Filters: type, location, severity, status, source
-//   * Status management (Active / Monitoring / Resolved)
-//   * Genuine data source: USGS Earthquake feed (official)
-// Data comes from Cloud Firestore collection "disaster_reports"
+// ResQCloud - Module 2: Disaster Management
+// Firebase Compat SDK
+//
+// Features:
+// 1. Live disaster reports from Firestore
+// 2. Official USGS earthquake feed
+// 3. Search and filters
+// 4. Disaster details popup
+// 5. Status management interface
 // =====================================================
 
-import { db, auth } from "./firebase.js";
+document.addEventListener("DOMContentLoaded", function () {
 
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    doc,
-    updateDoc,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    // ---------------- SETTINGS ----------------
 
+    const USGS_URL =
+        "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson";
 
-// ---------- Settings ----------
+    const STATUSES = ["Active", "Monitoring", "Resolved"];
 
-// Module 1 (Authentication) is built by a teammate.
-// Once login works, change this to true so ONLY logged-in users
-// (admins) can change a disaster's status.
-const REQUIRE_LOGIN_FOR_STATUS = false;
+    let communityReports = [];
+    let usgsReports = [];
 
-const STATUSES = ["Active", "Monitoring", "Resolved"];
+    const db = window.db;
 
-const USGS_URL =
-    "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson";
-
-
-// ---------- State ----------
-
-let communityReports = [];   // from Firestore (unverified)
-let usgsReports = [];        // from USGS (official)
-let currentUser = null;
-
-
-// ---------- Helpers ----------
-
-// Stops user-typed text from running as HTML (security)
-function esc(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
-
-function iconFor(type) {
-    const t = (type || "").toLowerCase();
-    if (t.includes("flood")) return "🌊";
-    if (t.includes("fire")) return "🔥";
-    if (t.includes("storm") || t.includes("cyclone")) return "🌪️";
-    if (t.includes("earthquake")) return "🏚️";
-    if (t.includes("landslide")) return "⛰️";
-    return "🚨";
-}
-
-function formatTime(value) {
-    // Firestore Timestamp, JS Date, number or null
-    const date = value?.toDate ? value.toDate() : value ? new Date(value) : null;
-    return date && !isNaN(date) ? date.toLocaleString() : "Just now";
-}
-
-function severityClass(severity) {
-    return "sev-" + (severity || "low").toLowerCase();
-}
-
-function statusClass(status) {
-    return "st-" + (status || "active").toLowerCase();
-}
-
-function allReports() {
-    return [...communityReports, ...usgsReports];
-}
-
-
-// ---------- Load data ----------
-
-// Live updates from Firestore (cards refresh by themselves)
-function listenToFirestore() {
-    const q = query(
-        collection(db, "disaster_reports"),
-        orderBy("created_at", "desc")
-    );
-
-    onSnapshot(
-        q,
-        (snapshot) => {
-            communityReports = snapshot.docs.map((d) => {
-                const data = d.data();
-                return {
-                    id: d.id,
-                    source: "community",
-                    ...data,
-                    verified: data.verified === true,   // set by admin on the Alerts page
-                    status: data.status || "Active"
-                };
-            });
-            refreshLocationOptions();
-            render();
-        },
-        (error) => {
-            console.error("Firestore error:", error);
-            document.getElementById("disasterList").innerHTML =
-                "<p>Unable to load disaster reports. " + esc(error.message) + "</p>";
-        }
-    );
-}
-
-// Official earthquake data from USGS (free public API, no key needed)
-async function loadUSGS() {
-    try {
-        const response = await fetch(USGS_URL);
-        if (!response.ok) throw new Error("USGS request failed");
-
-        const data = await response.json();
-
-        usgsReports = (data.features || []).map((f) => {
-            const mag = f.properties.mag ?? 0;
-            return {
-                id: "usgs-" + f.id,
-                source: "usgs",
-                verified: true,
-                name: "USGS Earthquake Hazards Program",
-                disaster_type: "Earthquake",
-                location: f.properties.place || "Unknown location",
-                description: f.properties.title || "Earthquake",
-                severity: mag >= 6 ? "High" : mag >= 5 ? "Medium" : "Low",
-                status: "Active",
-                magnitude: mag,
-                created_at: f.properties.time,
-                url: f.properties.url
-            };
-        });
-
-        refreshLocationOptions();
-        render();
-    } catch (error) {
-        // USGS is optional - the page still works without it
-        console.warn("USGS feed unavailable:", error);
-    }
-}
-
-
-// ---------- Filters ----------
-
-function refreshLocationOptions() {
-    const select = document.getElementById("locationFilter");
-    const previous = select.value;
-
-    const locations = [
-        ...new Set(
-            allReports()
-                .map((r) => (r.location || "").trim())
-                .filter(Boolean)
-        )
-    ].sort((a, b) => a.localeCompare(b));
-
-    select.innerHTML =
-        '<option value="all">All Locations</option>' +
-        locations
-            .map((l) => `<option value="${esc(l.toLowerCase())}">${esc(l)}</option>`)
-            .join("");
-
-    select.value = locations.some((l) => l.toLowerCase() === previous)
-        ? previous
-        : "all";
-}
-
-function getFiltered() {
-    const search = document.getElementById("searchDisaster").value.toLowerCase().trim();
-    const type = document.getElementById("typeFilter").value;
-    const location = document.getElementById("locationFilter").value;
-    const severity = document.getElementById("severityFilter").value;
-    const status = document.getElementById("statusFilter").value;
-    const source = document.getElementById("sourceFilter").value;
-
-    return allReports().filter((r) => {
-        const rType = (r.disaster_type || "").toLowerCase();
-        const rLocation = (r.location || "").toLowerCase();
-        const rText = `${rLocation} ${(r.description || "").toLowerCase()} ${rType}`;
-
-        return (
-            (!search || rText.includes(search)) &&
-            (type === "all" || rType === type) &&
-            (location === "all" || rLocation === location) &&
-            (severity === "all" || (r.severity || "").toLowerCase() === severity) &&
-            (status === "all" || (r.status || "").toLowerCase() === status) &&
-            (source === "all" || r.source === source)
-        );
-    });
-}
-
-
-// ---------- Listing ----------
-
-function toMillis(value) {
-    const date = value?.toDate ? value.toDate() : value ? new Date(value) : null;
-    return date && !isNaN(date) ? date.getTime() : Date.now();
-}
-
-function render() {
     const container = document.getElementById("disasterList");
-    const count = document.getElementById("resultCount");
+    const resultCount = document.getElementById("resultCount");
+    const modal = document.getElementById("detailsModal");
+    const modalBody = document.getElementById("modalBody");
 
-    const reports = getFiltered().sort(
-        (a, b) => toMillis(b.created_at) - toMillis(a.created_at)
-    );
-
-    count.textContent = `Showing ${reports.length} of ${allReports().length} incidents`;
-
-    if (reports.length === 0) {
-        container.innerHTML = "<p>No disaster reports found.</p>";
+    if (!container) {
+        console.error("Disaster list element was not found.");
         return;
     }
 
-    container.innerHTML = reports
-        .map(
-            (r) => `
-        <div class="disaster-card clickable" data-id="${esc(r.id)}" tabindex="0">
+    if (!db || typeof firebase === "undefined") {
+        container.textContent =
+            "Firebase connection failed. Please refresh the page.";
 
-            <div class="disaster-top">
-                <span class="disaster-type">${iconFor(r.disaster_type)} ${esc(r.disaster_type)}</span>
-                <span class="badge ${severityClass(r.severity)}">${esc(r.severity)}</span>
-            </div>
+        console.error("Firebase Compat SDK is not initialized.");
+        return;
+    }
 
-            <h3>${esc(r.description)}</h3>
+    // ---------------- HELPERS ----------------
+
+    function escapeHTML(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function iconFor(type) {
+        const value = (type || "").toLowerCase();
+
+        if (value.includes("flood")) return "🌊";
+        if (value.includes("fire")) return "🔥";
+
+        if (
+            value.includes("storm") ||
+            value.includes("cyclone")
+        ) {
+            return "🌪️";
+        }
+
+        if (value.includes("earthquake")) return "🏚️";
+        if (value.includes("landslide")) return "⛰️";
+
+        return "🚨";
+    }
+
+    function formatTime(value) {
+        if (!value) return "Date unavailable";
+
+        let date;
+
+        if (typeof value.toDate === "function") {
+            date = value.toDate();
+        } else if (typeof value === "number") {
+            date = new Date(value);
+        } else {
+            date = new Date(value);
+        }
+
+        if (Number.isNaN(date.getTime())) {
+            return "Date unavailable";
+        }
+
+        return date.toLocaleString();
+    }
+
+    function severityClass(severity) {
+        return "sev-" + (severity || "low").toLowerCase();
+    }
+
+    function statusClass(status) {
+        return "st-" + (status || "active").toLowerCase();
+    }
+
+    function getAllReports() {
+        return [...communityReports, ...usgsReports];
+    }
+
+    function getReportById(id) {
+        return getAllReports().find(function (report) {
+            return report.id === id;
+        });
+    }
+
+    // ---------------- FIRESTORE ----------------
+
+    function listenToFirestore() {
+        db.collection("disaster_reports")
+            .orderBy("created_at", "desc")
+            .onSnapshot(
+                function (snapshot) {
+
+                    communityReports = snapshot.docs.map(function (document) {
+                        const data = document.data();
+
+                        return {
+                            id: document.id,
+                            source: "community",
+                            name: data.name || "Unknown reporter",
+                            disaster_type: data.disaster_type || "Unknown disaster",
+                            location: data.location || "Location unavailable",
+                            description: data.description || "No description provided",
+                            severity: data.severity || "Low",
+                            status: data.status || "Active",
+                            created_at: data.created_at || null,
+                            verified: data.verified === true
+                        };
+                    });
+
+                    refreshLocationOptions();
+                    renderReports();
+
+                    console.log(
+                        "Community reports loaded from Firestore:",
+                        communityReports.length
+                    );
+                },
+                function (error) {
+                    console.error(
+                        "Could not load Firestore reports:",
+                        error
+                    );
+
+                    container.textContent =
+                        "Unable to load community reports: " +
+                        error.message;
+                }
+            );
+    }
+
+    // ---------------- USGS EARTHQUAKES ----------------
+
+    async function loadUSGS() {
+        try {
+            const response = await fetch(USGS_URL);
+
+            if (!response.ok) {
+                throw new Error("USGS request failed.");
+            }
+
+            const data = await response.json();
+
+            usgsReports = (data.features || []).map(function (feature) {
+                const properties = feature.properties || {};
+                const magnitude = properties.mag ?? 0;
+
+                return {
+                    id: "usgs-" + feature.id,
+                    source: "usgs",
+                    verified: true,
+                    name: "USGS Earthquake Hazards Program",
+                    disaster_type: "Earthquake",
+                    location: properties.place || "Unknown location",
+                    description: properties.title || "Earthquake",
+                    severity:
+                        magnitude >= 6
+                            ? "High"
+                            : magnitude >= 5
+                                ? "Medium"
+                                : "Low",
+                    status: "Active",
+                    magnitude: magnitude,
+                    created_at: properties.time,
+                    url: properties.url
+                };
+            });
+
+            refreshLocationOptions();
+            renderReports();
+
+            console.log("USGS earthquake reports loaded:", usgsReports.length);
+
+        } catch (error) {
+            console.warn("USGS feed unavailable:", error);
+            // Community reports remain available even if USGS is offline.
+        }
+    }
+
+    // ---------------- LOCATION FILTER ----------------
+
+    function refreshLocationOptions() {
+        const select = document.getElementById("locationFilter");
+
+        if (!select) return;
+
+        const previousValue = select.value;
+
+        const locations = [
+            ...new Set(
+                getAllReports()
+                    .map(function (report) {
+                        return (report.location || "").trim();
+                    })
+                    .filter(Boolean)
+            )
+        ].sort(function (a, b) {
+            return a.localeCompare(b);
+        });
+
+        select.innerHTML =
+            '<option value="all">All Locations</option>' +
+            locations.map(function (location) {
+                return (
+                    '<option value="' +
+                    escapeHTML(location.toLowerCase()) +
+                    '">' +
+                    escapeHTML(location) +
+                    "</option>"
+                );
+            }).join("");
+
+        const stillExists = locations.some(function (location) {
+            return location.toLowerCase() === previousValue;
+        });
+
+        select.value = stillExists ? previousValue : "all";
+    }
+
+    // ---------------- FILTERS ----------------
+
+    function getFilteredReports() {
+        const searchInput = document.getElementById("searchDisaster");
+        const typeFilter = document.getElementById("typeFilter");
+        const locationFilter = document.getElementById("locationFilter");
+        const severityFilter = document.getElementById("severityFilter");
+        const statusFilter = document.getElementById("statusFilter");
+        const sourceFilter = document.getElementById("sourceFilter");
+
+        const search =
+            (searchInput?.value || "").toLowerCase().trim();
+
+        const type = typeFilter?.value || "all";
+        const location = locationFilter?.value || "all";
+        const severity = severityFilter?.value || "all";
+        const status = statusFilter?.value || "all";
+        const source = sourceFilter?.value || "all";
+
+        return getAllReports().filter(function (report) {
+            const reportType =
+                (report.disaster_type || "").toLowerCase();
+
+            const reportLocation =
+                (report.location || "").toLowerCase();
+
+            const reportSeverity =
+                (report.severity || "").toLowerCase();
+
+            const reportStatus =
+                (report.status || "").toLowerCase();
+
+            const searchableText = [
+                reportType,
+                reportLocation,
+                report.description || "",
+                report.name || ""
+            ].join(" ").toLowerCase();
+
+            return (
+                (!search || searchableText.includes(search)) &&
+                (type === "all" || reportType === type) &&
+                (location === "all" || reportLocation === location) &&
+                (severity === "all" || reportSeverity === severity) &&
+                (status === "all" || reportStatus === status) &&
+                (source === "all" || report.source === source)
+            );
+        });
+    }
+
+    // ---------------- DISPLAY REPORTS ----------------
+
+    function toMillis(value) {
+        if (!value) return 0;
+
+        const date =
+            typeof value.toDate === "function"
+                ? value.toDate()
+                : new Date(value);
+
+        return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+    }
+
+    function renderReports() {
+        const reports = getFilteredReports().sort(function (a, b) {
+            return toMillis(b.created_at) - toMillis(a.created_at);
+        });
+
+        if (resultCount) {
+            resultCount.textContent =
+                `Showing ${reports.length} of ${getAllReports().length} incidents`;
+        }
+
+        container.replaceChildren();
+
+        if (reports.length === 0) {
+            container.textContent = "No disaster reports found.";
+            return;
+        }
+
+        reports.forEach(function (report) {
+            const card = document.createElement("div");
+
+            card.className = "disaster-card clickable";
+            card.dataset.id = report.id;
+            card.tabIndex = 0;
+            card.setAttribute("role", "button");
+            card.setAttribute(
+                "aria-label",
+                "View details for " + report.disaster_type
+            );
+
+            card.innerHTML = `
+                <div class="disaster-top">
+                    <span class="disaster-type">
+                        ${iconFor(report.disaster_type)}
+                        ${escapeHTML(report.disaster_type)}
+                    </span>
+
+                    <span class="badge ${severityClass(report.severity)}">
+                        ${escapeHTML(report.severity)}
+                    </span>
+                </div>
+
+                <h3>${escapeHTML(report.description)}</h3>
+
+                <div class="badge-row">
+                    <span class="badge ${statusClass(report.status)}">
+                        ${escapeHTML(report.status)}
+                    </span>
+
+                    <span class="badge ${
+                        report.verified
+                            ? "src-official"
+                            : "src-unverified"
+                    }">
+                        ${
+                            report.verified
+                                ? "✔ Official"
+                                : "Unverified report"
+                        }
+                    </span>
+                </div>
+
+                <div class="disaster-meta">
+                    <span>📍 ${escapeHTML(report.location)}</span>
+                    <span>🕐 ${escapeHTML(formatTime(report.created_at))}</span>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    // ---------------- DETAILS POPUP ----------------
+
+    function openDetails(id) {
+        const report = getReportById(id);
+
+        if (!report || !modal || !modalBody) return;
+
+        const canEdit = report.source === "community";
+
+        let statusControl = "";
+
+        if (canEdit) {
+            statusControl = `
+                <label for="statusSelect">
+                    <strong>Update status</strong>
+                </label>
+
+                <div class="status-edit">
+                    <select id="statusSelect">
+                        ${STATUSES.map(function (status) {
+                            return `
+                                <option value="${status}"
+                                    ${status === report.status ? "selected" : ""}>
+                                    ${status}
+                                </option>
+                            `;
+                        }).join("")}
+                    </select>
+
+                    <button
+                        type="button"
+                        class="primary-btn"
+                        id="saveStatusBtn"
+                        data-id="${escapeHTML(report.id)}"
+                    >
+                        Save
+                    </button>
+                </div>
+
+                <p id="statusMsg" class="status-msg"></p>
+            `;
+        } else {
+            statusControl = `
+                <p class="status-msg">
+                    Official USGS feed data is read-only.
+                </p>
+            `;
+        }
+
+        modalBody.innerHTML = `
+            <h2>
+                ${iconFor(report.disaster_type)}
+                ${escapeHTML(report.disaster_type)}
+            </h2>
 
             <div class="badge-row">
-                <span class="badge ${statusClass(r.status)}">${esc(r.status)}</span>
-                <span class="badge ${r.verified ? "src-official" : "src-unverified"}">
-                    ${r.verified ? "✔ Official" : "Unverified report"}
+                <span class="badge ${severityClass(report.severity)}">
+                    ${escapeHTML(report.severity)} severity
+                </span>
+
+                <span class="badge ${statusClass(report.status)}">
+                    ${escapeHTML(report.status)}
+                </span>
+
+                <span class="badge ${
+                    report.verified ? "src-official" : "src-unverified"
+                }">
+                    ${
+                        report.verified
+                            ? "✔ Official source"
+                            : "Unverified community report"
+                    }
                 </span>
             </div>
 
-            <div class="disaster-meta">
-                <span>📍 ${esc(r.location)}</span>
-                <span>🕐 ${esc(formatTime(r.created_at))}</span>
-            </div>
+            <p class="detail-desc">
+                ${escapeHTML(report.description)}
+            </p>
 
-        </div>`
-        )
-        .join("");
-}
+            <table class="detail-table">
+                <tr>
+                    <td>📍 Location</td>
+                    <td>${escapeHTML(report.location)}</td>
+                </tr>
 
+                <tr>
+                    <td>🕐 Reported</td>
+                    <td>${escapeHTML(formatTime(report.created_at))}</td>
+                </tr>
 
-// ---------- Details popup ----------
+                <tr>
+                    <td>👤 Reporter / Source</td>
+                    <td>${escapeHTML(report.name)}</td>
+                </tr>
 
-function canChangeStatus(report) {
-    if (report.source !== "community") return false;       // USGS data is read-only
-    if (REQUIRE_LOGIN_FOR_STATUS && !currentUser) return false;
-    return true;
-}
+                ${
+                    report.magnitude != null
+                        ? `
+                            <tr>
+                                <td>📈 Magnitude</td>
+                                <td>${escapeHTML(report.magnitude)}</td>
+                            </tr>
+                        `
+                        : ""
+                }
 
-function openDetails(id) {
-    const r = allReports().find((x) => x.id === id);
-    if (!r) return;
+                ${
+                    report.url
+                        ? `
+                            <tr>
+                                <td>🔗 More information</td>
+                                <td>
+                                    <a href="${escapeHTML(report.url)}"
+                                       target="_blank"
+                                       rel="noopener noreferrer">
+                                        View on USGS
+                                    </a>
+                                </td>
+                            </tr>
+                        `
+                        : ""
+                }
+            </table>
 
-    const statusControl = canChangeStatus(r)
-        ? `
-        <label for="statusSelect"><strong>Update status</strong></label>
-        <div class="status-edit">
-            <select id="statusSelect">
-                ${STATUSES.map(
-                    (s) => `<option ${s === r.status ? "selected" : ""}>${s}</option>`
-                ).join("")}
-            </select>
-            <button class="primary-btn" id="saveStatusBtn" data-id="${esc(r.id)}">Save</button>
-        </div>
-        <p id="statusMsg" class="status-msg"></p>`
-        : `<p class="status-msg">${
-              r.source !== "community"
-                  ? "Official feed data is read-only."
-                  : "Log in as admin to change the status."
-          }</p>`;
+            ${statusControl}
+        `;
 
-    document.getElementById("modalBody").innerHTML = `
-        <h2>${iconFor(r.disaster_type)} ${esc(r.disaster_type)}</h2>
-
-        <div class="badge-row">
-            <span class="badge ${severityClass(r.severity)}">${esc(r.severity)} severity</span>
-            <span class="badge ${statusClass(r.status)}">${esc(r.status)}</span>
-            <span class="badge ${r.verified ? "src-official" : "src-unverified"}">
-                ${r.verified ? "✔ Official source" : "Unverified community report"}
-            </span>
-        </div>
-
-        <p class="detail-desc">${esc(r.description)}</p>
-
-        <table class="detail-table">
-            <tr><td>📍 Location</td><td>${esc(r.location)}</td></tr>
-            <tr><td>🕐 Reported</td><td>${esc(formatTime(r.created_at))}</td></tr>
-            <tr><td>👤 Source</td><td>${esc(r.name)}</td></tr>
-            ${r.magnitude != null ? `<tr><td>📈 Magnitude</td><td>${esc(r.magnitude)}</td></tr>` : ""}
-            ${
-                r.url
-                    ? `<tr><td>🔗 More info</td><td><a href="${esc(r.url)}" target="_blank" rel="noopener">View on USGS</a></td></tr>`
-                    : ""
-            }
-        </table>
-
-        ${statusControl}
-    `;
-
-    document.getElementById("detailsModal").hidden = false;
-}
-
-function closeDetails() {
-    document.getElementById("detailsModal").hidden = true;
-}
-
-
-// ---------- Status management ----------
-
-async function saveStatus(id) {
-    const select = document.getElementById("statusSelect");
-    const message = document.getElementById("statusMsg");
-    const button = document.getElementById("saveStatusBtn");
-
-    button.disabled = true;
-    message.textContent = "Saving...";
-
-    try {
-        await updateDoc(doc(db, "disaster_reports", id), {
-            status: select.value,
-            updated_at: serverTimestamp()
-        });
-        message.textContent = "✅ Status updated to " + select.value;
-        // The live listener (onSnapshot) refreshes the cards automatically
-    } catch (error) {
-        console.error("Status update failed:", error);
-        message.textContent = "❌ Could not update: " + error.message;
-    } finally {
-        button.disabled = false;
+        modal.hidden = false;
     }
-}
 
+    function closeDetails() {
+        if (modal) modal.hidden = true;
+    }
 
-// ---------- Events ----------
+    // ---------------- STATUS MANAGEMENT ----------------
+    // Your current Firestore rules deny updates, so the save action
+    // may fail until secure status-update authorization is implemented.
 
-["searchDisaster"].forEach((id) =>
-    document.getElementById(id).addEventListener("input", render)
-);
+    async function saveStatus(id) {
+        const select = document.getElementById("statusSelect");
+        const message = document.getElementById("statusMsg");
+        const button = document.getElementById("saveStatusBtn");
 
-["typeFilter", "locationFilter", "severityFilter", "statusFilter", "sourceFilter"].forEach(
-    (id) => document.getElementById(id).addEventListener("change", render)
-);
+        if (!select || !message || !button) return;
 
-document.getElementById("disasterList").addEventListener("click", (e) => {
-    const card = e.target.closest(".disaster-card");
-    if (card) openDetails(card.dataset.id);
-});
+        button.disabled = true;
+        message.textContent = "Saving...";
 
-document.getElementById("disasterList").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        const card = e.target.closest(".disaster-card");
+        try {
+            await db.collection("disaster_reports").doc(id).update({
+                status: select.value,
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            message.textContent = "Status updated successfully.";
+
+        } catch (error) {
+            console.error("Status update failed:", error);
+
+            message.textContent =
+                "Could not update status. Your current Firebase security rules may prohibit updates.";
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    // ---------------- EVENT LISTENERS ----------------
+
+    document.getElementById("searchDisaster")
+        ?.addEventListener("input", renderReports);
+
+    [
+        "typeFilter",
+        "locationFilter",
+        "severityFilter",
+        "statusFilter",
+        "sourceFilter"
+    ].forEach(function (id) {
+        document.getElementById(id)
+            ?.addEventListener("change", renderReports);
+    });
+
+    container.addEventListener("click", function (event) {
+        const card = event.target.closest(".disaster-card");
+
         if (card) openDetails(card.dataset.id);
-    }
+    });
+
+    container.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter" && event.key !== " ") return;
+
+        const card = event.target.closest(".disaster-card");
+
+        if (card) {
+            event.preventDefault();
+            openDetails(card.dataset.id);
+        }
+    });
+
+    document.getElementById("modalClose")
+        ?.addEventListener("click", closeDetails);
+
+    modal?.addEventListener("click", function (event) {
+        if (event.target === modal) closeDetails();
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") closeDetails();
+    });
+
+    modalBody?.addEventListener("click", function (event) {
+        if (event.target.id === "saveStatusBtn") {
+            saveStatus(event.target.dataset.id);
+        }
+    });
+
+    // ---------------- START ----------------
+
+    listenToFirestore();
+    loadUSGS();
+
 });
-
-document.getElementById("modalClose").addEventListener("click", closeDetails);
-
-document.getElementById("detailsModal").addEventListener("click", (e) => {
-    if (e.target.id === "detailsModal") closeDetails();
-});
-
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeDetails();
-});
-
-document.getElementById("modalBody").addEventListener("click", (e) => {
-    if (e.target.id === "saveStatusBtn") saveStatus(e.target.dataset.id);
-});
-
-// Track login state (used when REQUIRE_LOGIN_FOR_STATUS is true)
-import("https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js")
-    .then(({ onAuthStateChanged }) => {
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-        });
-    })
-    .catch(() => {});
-
-
-// ---------- Start ----------
-
-listenToFirestore();
-loadUSGS();
