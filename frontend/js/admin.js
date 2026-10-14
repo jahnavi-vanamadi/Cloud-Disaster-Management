@@ -1,214 +1,209 @@
-const API_URL = "http://127.0.0.1:8000";
+// ResQCloud Admin Dashboard
+// Reads disaster reports from Firebase Firestore.
 
+document.addEventListener("DOMContentLoaded", function () {
+const totalReportsElement = document.getElementById("adminTotalReports");
+const highSeverityElement = document.getElementById("highSeverity");
+const mediumSeverityElement = document.getElementById("mediumSeverity");
+const lowSeverityElement = document.getElementById("lowSeverity");
+const reportsTable = document.getElementById("adminReportsTable");
 
-// Load statistics
-async function loadAdminStats() {
+const db = window.db;
 
-    try {
+if (!db) {
+    console.error("Firebase Firestore is not initialized.");
 
-        const response = await fetch(`${API_URL}/stats`);
+    if (reportsTable) {
+        reportsTable.innerHTML =
+            '<tr><td colspan="6">Cloud connection failed. Please refresh the page.</td></tr>';
+    }
 
-        if (!response.ok) {
-            throw new Error("Failed to load statistics");
-        }
+    return;
+}
 
-        const stats = await response.json();
+let reportsById = {};
 
-        document.getElementById("adminTotalReports").textContent =
-            stats.total_reports;
+function displayMessage(message) {
+    if (reportsTable) {
+        reportsTable.replaceChildren();
 
-        document.getElementById("highSeverity").textContent =
-            stats.high_severity;
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
 
-        document.getElementById("mediumSeverity").textContent =
-            stats.medium_severity;
+        cell.colSpan = 6;
+        cell.textContent = message;
 
-        document.getElementById("lowSeverity").textContent =
-            stats.low_severity;
-
-    } catch (error) {
-
-        console.error("Stats error:", error);
-
+        row.appendChild(cell);
+        reportsTable.appendChild(row);
     }
 }
 
+function addCell(row, value) {
+    const cell = document.createElement("td");
+    cell.textContent = value == null ? "" : String(value);
+    row.appendChild(cell);
+    return cell;
+}
 
-// Load reports
-async function loadAdminReports() {
+function renderReports(snapshot) {
+    const reports = [];
 
-    try {
+    reportsById = {};
 
-        const response = await fetch(`${API_URL}/reports/`);
+    snapshot.forEach(function (documentSnapshot) {
+        const report = documentSnapshot.data();
 
-        if (!response.ok) {
-            throw new Error("Failed to load reports");
-        }
-
-        const data = await response.json();
-
-        const reports = data.reports || [];
-
-        const table =
-            document.getElementById("adminReportsTable");
-
-        table.innerHTML = "";
-
-
-        if (reports.length === 0) {
-
-            table.innerHTML = `
-                <tr>
-                    <td colspan="6">
-                        No disaster reports available.
-                    </td>
-                </tr>
-            `;
-
-            return;
-        }
-
-
-        reports.slice().reverse().forEach(report => {
-
-            const row = document.createElement("tr");
-
-            row.innerHTML = `
-
-                <td>${report.id}</td>
-
-                <td>
-                    ${report.disaster_type}
-                </td>
-
-                <td>
-                    📍 ${report.location}
-                </td>
-
-                <td>
-                    ${report.name}
-                </td>
-
-                <td>
-                    <span class="status active-status">
-                        ${report.severity}
-                    </span>
-                </td>
-
-                <td>
-
-                    <button
-                        class="table-btn"
-                        onclick="viewReport(${report.id})">
-                        View
-                    </button>
-
-                    <button
-                        class="table-btn"
-                        onclick="deleteReport(${report.id})">
-                        Delete
-                    </button>
-
-                </td>
-            `;
-
-            table.appendChild(row);
-
+        reports.push({
+            id: documentSnapshot.id,
+            ...report
         });
 
-    } catch (error) {
+        reportsById[documentSnapshot.id] = report;
+    });
 
-        console.error("Reports error:", error);
-
-        document.getElementById("adminReportsTable").innerHTML = `
-            <tr>
-                <td colspan="6">
-                    Unable to load reports.
-                </td>
-            </tr>
-        `;
+    if (totalReportsElement) {
+        totalReportsElement.textContent = reports.length;
     }
-}
 
+    let high = 0;
+    let medium = 0;
+    let low = 0;
 
-// View report details
-async function viewReport(id) {
+    reports.forEach(function (report) {
+        const severity = String(report.severity || "").toLowerCase();
 
-    try {
+        if (severity === "high") high++;
+        else if (severity === "medium") medium++;
+        else if (severity === "low") low++;
+    });
 
-        const response =
-            await fetch(`${API_URL}/reports/${id}`);
+    if (highSeverityElement) highSeverityElement.textContent = high;
+    if (mediumSeverityElement) mediumSeverityElement.textContent = medium;
+    if (lowSeverityElement) lowSeverityElement.textContent = low;
 
-        if (!response.ok) {
-            throw new Error("Report not found");
-        }
+    if (!reportsTable) return;
 
-        const report = await response.json();
+    reportsTable.replaceChildren();
 
-        alert(
-            `DISASTER REPORT\n\n` +
-            `ID: ${report.id}\n` +
-            `Name: ${report.name}\n` +
-            `Type: ${report.disaster_type}\n` +
-            `Location: ${report.location}\n` +
-            `Severity: ${report.severity}\n\n` +
-            `Description:\n${report.description}`
-        );
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert("Unable to load report details.");
-
-    }
-}
-
-
-// Delete report
-async function deleteReport(id) {
-
-    const confirmDelete =
-        confirm(
-            `Are you sure you want to delete report #${id}?`
-        );
-
-    if (!confirmDelete) {
+    if (reports.length === 0) {
+        displayMessage("No disaster reports available.");
         return;
     }
 
+    reports.sort(function (a, b) {
+        const dateA = a.created_at && typeof a.created_at.toMillis === "function"
+            ? a.created_at.toMillis()
+            : 0;
+
+        const dateB = b.created_at && typeof b.created_at.toMillis === "function"
+            ? b.created_at.toMillis()
+            : 0;
+
+        return dateB - dateA;
+    });
+
+    reports.forEach(function (report) {
+        const row = document.createElement("tr");
+
+        addCell(row, report.id);
+        addCell(row, report.disaster_type || "Not specified");
+        addCell(row, "📍 " + (report.location || "Not specified"));
+        addCell(row, report.name || "Unknown");
+
+        const severityCell = addCell(row, report.severity || "Not specified");
+        const severityBadge = document.createElement("span");
+        severityBadge.className = "status active-status";
+        severityBadge.textContent = report.severity || "Not specified";
+
+        severityCell.replaceChildren(severityBadge);
+
+        const actionCell = document.createElement("td");
+
+        const viewButton = document.createElement("button");
+        viewButton.type = "button";
+        viewButton.className = "table-btn";
+        viewButton.textContent = "View";
+
+        viewButton.addEventListener("click", function () {
+            viewReport(report.id);
+        });
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "table-btn";
+        deleteButton.textContent = "Delete";
+
+        deleteButton.addEventListener("click", function () {
+            deleteReport(report.id);
+        });
+
+        actionCell.appendChild(viewButton);
+        actionCell.appendChild(document.createTextNode(" "));
+        actionCell.appendChild(deleteButton);
+        row.appendChild(actionCell);
+
+        reportsTable.appendChild(row);
+    });
+}
+
+// Display the full details of a report.
+function viewReport(id) {
+    const report = reportsById[id];
+
+    if (!report) {
+        alert("Report details are not available. Please refresh the page.");
+        return;
+    }
+
+    alert(
+        "DISASTER REPORT\n\n" +
+        "ID: " + id + "\n" +
+        "Name: " + (report.name || "Unknown") + "\n" +
+        "Type: " + (report.disaster_type || "Not specified") + "\n" +
+        "Location: " + (report.location || "Not specified") + "\n" +
+        "Severity: " + (report.severity || "Not specified") + "\n" +
+        "Status: " + (report.status || "Not specified") + "\n\n" +
+        "Description:\n" + (report.description || "No description provided.")
+    );
+}
+
+// Delete a report from Firestore after confirmation.
+async function deleteReport(id) {
+    const confirmed = confirm(
+        "Are you sure you want to delete this disaster report?"
+    );
+
+    if (!confirmed) return;
 
     try {
-
-        const response =
-            await fetch(`${API_URL}/reports/${id}`, {
-                method: "DELETE"
-            });
-
-
-        if (!response.ok) {
-            throw new Error("Failed to delete report");
-        }
-
-
-        alert("✅ Report deleted successfully!");
-
-
-        // Reload admin page data
-        loadAdminStats();
-        loadAdminReports();
-
-
+        await db.collection("disaster_reports").doc(id).delete();
+        alert("Disaster report deleted successfully.");
     } catch (error) {
+        console.error("Could not delete report:", error);
 
-        console.error(error);
-
-        alert("❌ Could not delete the report.");
-
+        alert(
+            "Could not delete the report. Check that you are signed in " +
+            "as an authorized administrator and that Firestore security rules allow this action."
+        );
     }
 }
 
+// Keep these functions available to the dashboard buttons.
+window.viewReport = viewReport;
+window.deleteReport = deleteReport;
 
-// Start
-loadAdminStats();
-loadAdminReports();
+// Listen for changes so the dashboard updates when reports are added or removed.
+db.collection("disaster_reports")
+    .onSnapshot(
+        renderReports,
+        function (error) {
+            console.error("Error loading Firestore reports:", error);
+
+            displayMessage(
+                "Unable to load reports. Check your login and Firestore permissions."
+            );
+        }
+    );
+
+
+});
